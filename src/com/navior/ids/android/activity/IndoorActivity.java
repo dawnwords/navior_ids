@@ -30,6 +30,7 @@ import com.navior.ids.android.data.actiondao.FloorDAO;
 import com.navior.ids.android.service.locating.ids.component.LocatingListener;
 import com.navior.ids.android.service.locating.ids.component.LocatingService;
 import com.navior.ids.android.view.list.FloorSelector;
+import com.navior.ids.android.view.mall3d.OpenglRenderer;
 import com.navior.ids.android.view.mall3d.OpenglView;
 import com.navior.ids.android.view.popup.BottomPopup;
 import com.navior.ids.android.view.popup.LoadingDialog;
@@ -109,6 +110,8 @@ public class IndoorActivity extends Activity {
       shopPopup.dismiss();
       shopPopup = null;
     }
+    Parameter.getInstance().setCurrentMall(null);
+    Parameter.getInstance().setSelectedShop(null, null);
     super.onDestroy();
   }
 

@@ -16,43 +16,47 @@ package com.navior.ids.android.view.mall3d.model;
 import android.opengl.Matrix;
 import android.util.SparseArray;
 
+import com.navior.ids.android.view.mall3d.OpenglRenderer;
+import com.navior.ids.android.view.mall3d.mesh.Mesh;
+import com.navior.ids.android.view.mall3d.pass.Pass;
+
 public abstract class Model {
+  protected float[] matrixWorld = new float[16];
+  public Model() { Matrix.setIdentityM(matrixWorld, 0); }
 
-  public float[] matrixWorld = new float[16];
+  protected Mesh[] meshs = new Mesh[Pass.COUNT];
+  protected int[] pipelines = new int[Pass.COUNT];
 
-  public Model() {
-    Matrix.setIdentityM(matrixWorld, 0);
+  public final void draw(int pass) {
+    Mesh mesh = meshs[pass];
+    int pipeline = pipelines[pass];
+    if(mesh!=null) {
+      OpenglRenderer.getInstance().addMesh(mesh, pipeline);
+    }
   }
 
-  public abstract void draw(boolean selected);
-
-  public abstract void pick();
+  protected void setPass(int pass, int pipeline, Mesh mesh) {
+    meshs[pass] = mesh;
+    pipelines[pass] = pipeline;
+  }
 
   //HashMap<Integer, Model>. from color to mesh.
   private static SparseArray<Model> colorMesh = new SparseArray<Model>();
   private static int color[] = new int[3];
+  private static float fColor[];
 
   //start with black.
   public static void pickDrawStart() {
+    colorMesh.clear();
     color[0] = 0;
     color[1] = 0;
     color[2] = 0;
   }
 
-  //clear hash map for GC & next frame.
-  public static void pickDrawEnd() {
-    colorMesh.clear();
-  }
-
-  private static Model nextModel;
   protected void modelPick() {
-    nextModel = this;
-  }
-  protected static float[] getPickColor() {
-    //generate current color and save.
-    float[] result = new float[]{(float) color[0] / 255.0f, (float) color[1] / 255.0f, (float) color[2] / 255.0f, 1};
     int index = (color[2] << 16) | (color[1] << 8) | (color[0]);
-    colorMesh.put(index, nextModel);
+    fColor = new float[]{(float) color[0] / 255.0f, (float) color[1] / 255.0f, (float) color[2] / 255.0f, 1};
+    colorMesh.put(index, this);
 
     //find the next color
     color[0] += 16;
@@ -64,8 +68,11 @@ public abstract class Model {
         color[2] += 16;
       }
     }
-
-    return result;
+    if(color[2] > 255)
+      System.out.println("Renderer ModelPick out of range");
+  }
+  protected static float[] getPickColor() {
+    return fColor;
   }
 
   //hash map look up.

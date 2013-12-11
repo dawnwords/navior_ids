@@ -13,16 +13,19 @@
 
 package com.navior.ids.android.view.mall3d.appModel;
 
-import android.util.Log;
-
 import com.navior.ids.android.view.mall3d.appModel.triangulation.Triangle;
 import com.navior.ids.android.view.mall3d.appModel.triangulation.Triangulator;
 import com.navior.ids.android.view.mall3d.appModel.triangulation.TriangulatorB;
 import com.navior.ids.android.view.mall3d.appModel.triangulation.Vertex;
+import com.navior.ids.android.view.mall3d.model.ArrayColor;
+import com.navior.ids.android.view.mall3d.model.ArrayColorIndexed;
+import com.navior.ids.android.view.mall3d.model.ArrayLine;
 import com.navior.ids.android.view.mall3d.model.Model;
 import com.navior.ids.android.view.mall3d.model.ModelColor;
 import com.navior.ids.android.view.mall3d.model.ModelColorIndexed;
-import com.navior.ids.android.view.mall3d.model.ModelLineStrip;
+import com.navior.ids.android.view.mall3d.model.ModelLine;
+import com.navior.ids.android.view.mall3d.model.ModelQuad;
+import com.navior.ids.android.view.mall3d.pass.Pass;
 import com.navior.ids.android.view.mall3d.util.AABB;
 import com.navior.ips.model.Shop;
 import com.navior.ips.model.type.ShapeType;
@@ -39,25 +42,37 @@ public class ShopModel extends Model {
   // building
   private Triangulator g = new TriangulatorB();
   private boolean clockwise;
+  private ArrayColor wallData = null; public ArrayColor getWallData() { return wallData; }
+  private ArrayColorIndexed roofData = null; public ArrayColorIndexed getRoofData() { return roofData; }
+  private ArrayLine edgeData = null; public ArrayLine getEdgeData() { return edgeData; }
+  public void clearArrayData() { wallData = null; roofData = null; edgeData = null; }
   // After building
   private float low;
   private float high;
   private AABB aabb = new AABB();
   private ModelColorIndexed roof = null;
   private ModelColor wall = null;
-  private ModelLineStrip edge = null;
+  private ModelLine edge = null;
+  private boolean valid;
+  public boolean isValid() { return valid; }
 
   public static final float BG_OPACITY = 0.85f;
   public static final float STR_OPACITY = 1.0f;
 
   public Shop getShop() { return shop; }
   public ModelColorIndexed getRoof() { return roof; }
-  public ModelLineStrip getEdge() { return edge; }
+  public ModelLine getEdge() { return edge; }
   public ModelColor getWall() { return wall; }
   public AABB getAABB() { return aabb; }
 
+  private ModelQuad shopIcon = null;
+  public ModelQuad getShopIcon() { return shopIcon; }
+  public void setShopIcon(ModelQuad shopIcon) { this.shopIcon = shopIcon; }
 
   public ShopModel(Shop shop, boolean isBG, float floorHeight) {
+    modelPick();
+    float[] pickColor = getPickColor();
+
     this.shop = shop;
     if(isBG) {
       this.low = floorHeight - ModelConstants.BG_HEIGHT;
@@ -82,12 +97,15 @@ public class ShopModel extends Model {
       e.printStackTrace();
     }
     if(!correct) {
-      Log.w("[ips]Triangulation", "Triangulation failed, id=" + shop.getId());
+      System.out.println("Triangulator Triangulation failed, id=" + shop.getId());
     }
 
+    roofData = new ArrayColorIndexed(); roofData.setPickColor(pickColor);
     roof = new ModelColorIndexed();
+    wallData = new ArrayColor(); wallData.setPickColor(pickColor);
     wall = new ModelColor();
-    edge = new ModelLineStrip(); //not line strip actually, lines.
+    edgeData = new ArrayLine();
+    edge = new ModelLine();
 
     if(shop.getT() == ShapeType.STR.getValue()) {
       this.setColor(new float[]{1, 1, 1, 1});
@@ -128,7 +146,7 @@ public class ShopModel extends Model {
 
     if(ops == null)
       return true;
-    for(byte op : ops) { //解析ops 未检查但不应出现多个move（0）或close(4)
+    for(byte op : ops) { //解析ops 未检查但不应出现多个move(0)或close(4)
       switch(op) {
       case 0:
         firstVertex = lastVertex = g.newVertex(fls[index++], fls[index++]);
@@ -226,21 +244,19 @@ public class ShopModel extends Model {
   }
 
   private void build(boolean reverse) {
+    valid = (triangles != null);
     if(triangles == null) {
       return;
     }
 
     // Roof
-    roof.startNewArray(vertices.size(),
-        3 * triangles.size());
-    float[] roofColor = roof.getColor();
+    roofData.startNewArray(vertices.size(), 3 * triangles.size());
     for(Vertex v : vertices) {
-      roof.newVertex(v.x, high, v.y, roofColor[0], roofColor[1], roofColor[2]);
+      roofData.newVertex(v.x, high, v.y);
     }
     for(Triangle t : triangles) {
-      roof.newTriangle(t.v1.id, t.v3.id, t.v2.id);
+      roofData.newTriangle(t.v1.id, t.v3.id, t.v2.id);
     }
-    roof.endNewArray();
 
     // Wall
     boolean[] duplicateVertex = new boolean[angles.length];
@@ -255,14 +271,14 @@ public class ShopModel extends Model {
     }
 
     Vertex last = vertices.get(vertices.size()-1);
-    wall.startNewArray((vertices.size()+1) * 2 + duplicateCount * 2, last.x, high, last.y, last.x, low, last.y);
+    wallData.startNewArray((vertices.size() + 1) * 2 + duplicateCount * 2, last.x, high, last.y, last.x, low, last.y);
     boolean lastDuplicate = true;
     for(int i = 0; i != vertices.size(); i++) {
       Vertex current = vertices.get(i);
-      wall.newTwoVertices(current.x, high, current.y, current.x, low, current.y, lastDuplicate, duplicateVertex[i], reverse);
+      wallData.newTwoVertices(current.x, high, current.y, current.x, low, current.y, lastDuplicate, duplicateVertex[i], reverse);
       lastDuplicate = duplicateVertex[i];
     }
-    wall.endNewArray(duplicateVertex[vertices.size()-1]);
+    wallData.endNewArray(duplicateVertex[vertices.size() - 1]);
 
     //edge
     float[] edgePoints = new float[vertices.size()*3 *2]; //(xyz -> xyz) * n
@@ -281,8 +297,8 @@ public class ShopModel extends Model {
     edgePoints[i*6-3] = vertices.get(0).x;
     edgePoints[i*6-2] = high + ModelConstants.EDGE_Y_OFFSET;
     edgePoints[i*6-1] = vertices.get(0).y;
-    edge.setLine(edgePoints);
-    edge.setWidth(ModelConstants.EDGE_WIDTH);
+    edgeData.setVertexArray(edgePoints);
+    edgeData.width = ModelConstants.EDGE_WIDTH;
 
     vertices = null;
     triangles = null;
@@ -290,34 +306,31 @@ public class ShopModel extends Model {
 
   public void setColor(float[] color) {
     if(roof != null) {
-      roof.setColor(color);
-      wall.setColor(color);
+      roofData.setDrawColor(color);
+      wallData.setDrawColor(color);
     }
   }
 
   public void setEdgeColor(float[] edgeColor) {
     if(edge != null) {
-      edge.setColor(edgeColor);
+      edgeData.color = edgeColor;
     }
   }
 
-  @Override
   public void pick() {
     if(roof != null) {
-      modelPick();
-      roof.pick();
-      wall.pick();
+      roof.draw(Pass.PASS_PICK);
+      wall.draw(Pass.PASS_PICK);
     }
   }
 
-  @Override
-  public void draw(boolean selected) {
+  public void draw() {
     if(roof != null) {
-      roof.draw(true);
-      wall.draw(true);
+      roof.draw(Pass.PASS_DRAW);
+      wall.draw(Pass.PASS_DRAW);
     }
     if(edge != null) {
-      edge.draw(true);
+      edge.draw(Pass.PASS_DRAW);
     }
   }
 }

@@ -14,8 +14,10 @@ package com.navior.ids.android.view.mall3d.appModel;
 
 import android.opengl.GLES20;
 
-import com.navior.ids.android.view.mall3d.model.Model;
-import com.navior.ids.android.view.mall3d.model.ModelLineStrip;
+import com.navior.ids.android.view.mall3d.model.ArrayLine;
+import com.navior.ids.android.view.mall3d.model.ModelLine;
+import com.navior.ids.android.view.mall3d.pass.Pass;
+import com.navior.ids.android.view.mall3d.util.OpenglUtil;
 import com.navior.ips.model.Floor;
 import com.navior.ips.model.Mall;
 import com.navior.ips.model.POP;
@@ -24,9 +26,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class RouteModel extends Model {
+public class RouteModel {
 
-  ModelLineStrip line;
+  ModelLine line;
 
   public RouteModel() {
     this.setPoints(new float[]{
@@ -63,16 +65,16 @@ public class RouteModel extends Model {
   }
 
   public void setPoints(float[] p) {
-    line = new ModelLineStrip(p, new float[]{1, 0, 0, 1}, 10);
-    line.setTopology(GLES20.GL_LINE_STRIP);
+    ArrayLine arrayLine = new ArrayLine(p, new float[]{1, 0, 0, 1}, 10);
+    line = new ModelLine();
+    line.setPrimitiveType(GLES20.GL_LINE_STRIP);
+    line.finish(arrayLine);
   }
 
-  @Override
-  public void draw(boolean selected) {
-    line.draw(selected);
+  public void draw() {
+    line.draw(Pass.PASS_DRAW);
   }
 
-  @Override
   public void pick() {
 
   }

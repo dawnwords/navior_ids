@@ -19,16 +19,17 @@ import com.navior.ids.android.view.mall3d.util.OpenglUtil;
 public class ModelQuad extends ModelTexture {
 
   public static final float[] TEXCOORD = new float[]{0, 0, 1, 0, 0, 1, 1, 1};
-  public static final float[] VERTICES = new float[]{-0.5f, 0, -0.5f, 0.5f, 0, -0.5f, -0.5f, 0, 0.5f, 0.5f, 0, 0.5f};
-  public static final short[] INDICES = new short[]{0, 1, 2, 1, 3, 2};
+  public static final float[] VERTEX_QUAD = new float[]{-0.5f, 0, -0.5f, 0.5f, 0, -0.5f, -0.5f, 0, 0.5f, 0.5f, 0, 0.5f};
+  public static final float[] VERTEX_BILLBOARD = new float[]{0, 1, 0.5f,  0, 1, -0.5f,  0, 0, 0.5f,  0, 0, -0.5f};
+  public static final short[] INDEX = new short[]{0, 1, 2, 1, 3, 2};
 
   public ModelQuad(String fileName, float x, float y, float z, float sx, float sz) {
     super();
     setBuffersTextureId(
         OpenglUtil.getTextureSetResourceName().load(fileName),
-        getPosition(x, y, z, sx, sz),
+        ArrayQuad.getPosition(x, y, z, sx, sz),
         TEXCOORD,
-        INDICES
+        INDEX
     );
   }
 
@@ -36,30 +37,24 @@ public class ModelQuad extends ModelTexture {
     super();
     setBuffersTextureId(
         OpenglUtil.getTextureSetResourceId().load(resourceId),
-        getPosition(x, y, z, sx, sz),
+        ArrayQuad.getPosition(x, y, z, sx, sz),
         TEXCOORD,
-        INDICES
+        INDEX
     );
-  }
-
-  private float[] getPosition(float px, float py, float pz, float sx, float sz) {
-    float[] result = new float[12];
-    for(int i = 0; i != 12; i += 3) {
-      float x = VERTICES[i], y = VERTICES[i + 1], z = VERTICES[i + 2];
-      result[i] = px + x * sx;
-      result[i + 1] = py + y;
-      result[i + 2] = pz + z * sz;
-    }
-    return result;
   }
 
   public ModelQuad(Holder<Integer> textureId, float left, float top, float right, float bottom, float x, float y, float z, float sx, float sz) {
     super();
     setBuffersTextureId(
         textureId,
-        getPosition(x, y, z, sx, sz),
+        ArrayQuad.getPosition(x, y, z, sx, sz),
         new float[]{left, 1 - top, right, 1 - top, left, 1 - bottom, right, 1 - bottom},
-        INDICES
+        INDEX
     );
+  }
+
+  public ModelQuad(ArrayQuad arrayQuad) {
+    super();
+    setBuffersTextureId(arrayQuad.texture, arrayQuad.vertexArray, arrayQuad.texcoordArray, arrayQuad.indexArray);
   }
 }

@@ -103,15 +103,17 @@ public class ModelPacman extends ModelColorIndexed {
       indexData[i * 3 + 2] = currTriangles.get(i).v3;
     }
 
-    this.verticesNumber = currVertices.size();
-    this.verticesBuffer = OpenglUtil.getFloatBuffer(vertexData);
+    this.vertexCount = currVertices.size();
+    this.vertexBuffer = OpenglUtil.getFloatBuffer(vertexData);
     this.colorBuffer = OpenglUtil.getFloatBuffer(colorData);
-    this.indicesNumber = indexData.length;
-    this.indicesBuffer = OpenglUtil.getShortBuffer(indexData);
+    this.indexCount = indexData.length;
+    this.indexBuffer = OpenglUtil.getShortBuffer(indexData);
     Matrix.setIdentityM(matrixWorld, 0);
 
     currVertices = null;
     currTriangles = null;
+
+    setPasses();
   }
 
   public short midPoint(short a, short b) {

@@ -15,12 +15,14 @@ import com.navior.ids.android.view.mall3d.appModel.ShopModel;
 import com.navior.ids.android.view.mall3d.mesh.Mesh;
 import com.navior.ids.android.view.mall3d.model.Model;
 import com.navior.ids.android.view.mall3d.pipeline.Pipeline;
+import com.navior.ids.android.view.mall3d.pipeline.PipelineBillboardXZ;
+import com.navior.ids.android.view.mall3d.pipeline.PipelineBillboardXZPick;
 import com.navior.ids.android.view.mall3d.pipeline.PipelineColor;
 import com.navior.ids.android.view.mall3d.pipeline.PipelineColorBuffer;
-import com.navior.ids.android.view.mall3d.pipeline.PipelineLineStrip;
-import com.navior.ids.android.view.mall3d.pipeline.PipelineName;
+import com.navior.ids.android.view.mall3d.pipeline.PipelineLine;
 import com.navior.ids.android.view.mall3d.pipeline.PipelineTexture;
 import com.navior.ids.android.view.mall3d.appModel.MallModel;
+import com.navior.ids.android.view.mall3d.util.Holder;
 import com.navior.ids.android.view.mall3d.util.OpenglUtil;
 import com.navior.ids.android.view.mall3d.util.ThirdPersonCamera;
 import com.navior.ips.model.Mall;
@@ -35,13 +37,9 @@ import java.util.Observer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import static com.navior.ids.android.view.mall3d.pipeline.PipelineName.PIPELINE_COLOR;
-import static com.navior.ids.android.view.mall3d.pipeline.PipelineName.PIPELINE_COLORBUFFER;
-import static com.navior.ids.android.view.mall3d.pipeline.PipelineName.PIPELINE_LINESTRIP;
-import static com.navior.ids.android.view.mall3d.pipeline.PipelineName.PIPELINE_TEXTURE;
-
 public class OpenglRenderer implements GLSurfaceView.Renderer{
   private static OpenglRenderer instance = null;
+  public static void clearInstance() { instance = null; }
   public static OpenglRenderer getInstance() { return instance; }
 
   private MallModel mallModel;
@@ -56,10 +54,10 @@ public class OpenglRenderer implements GLSurfaceView.Renderer{
   public ThirdPersonCamera getCamera() { return camera; }
 
   private ShopModel selectedShopModel = null;
+  private ShopModel lastSelectedShopModel = null;
   public ShopModel getSelectedShopModel() { return selectedShopModel; }
 
-  private boolean contextLost;
-  public boolean isContextLost() { return contextLost; }
+  public final Holder<Float> currentAlpha = new Holder<Float>(1f);
 
   private FloorSelector selector;
   public FloorSelector getSelector() { return selector; };
@@ -112,13 +110,12 @@ public class OpenglRenderer implements GLSurfaceView.Renderer{
   }
 
   public void onContextLost() {
-    contextLost = true;
     OpenglUtil.reloadAllTextures();
     System.out.println("Renderer Context lost");
   }
 
   public void onLoad() {
-    initPipelines();
+    loadPipelines();
 
     GLES20.glDisable(GLES20.GL_CULL_FACE);
     GLES20.glClearDepthf(1.0f);
@@ -159,14 +156,14 @@ public class OpenglRenderer implements GLSurfaceView.Renderer{
       size = width;
     else
       size = height;
-    ModelConstants.EDGE_WIDTH = ModelConstants.REFERENCE_EDGE_WIDTH * size;
+    ModelConstants.EDGE_WIDTH = ModelConstants.EDGE_WIDTH_RADIO * size;
 
   }
 
   //---------------------------------------
   //-------------Touch & Draw--------------
 
-  private final static float X_TO_ALPHA = 0.005f, Y_TO_BETA = 0.004f, Y_TO_Y = 0.5f, X_TO_LEFT = 0.5f, Y_TO_BACK = 0.5f;
+  private final static float X_TO_ALPHA = 0.005f, Y_TO_BETA = 0.004f, Y_TO_Y = 2f, X_TO_LEFT = 0.5f, Y_TO_BACK = 0.5f;
   private boolean oldOne;
   private boolean oldTwo;
   private boolean one = false;
@@ -221,7 +218,7 @@ public class OpenglRenderer implements GLSurfaceView.Renderer{
         if (one && oldOne) { // drag
           if(Parameter.getInstance().isView3D()) {
             camera.addAngle((e.getX() - x) * X_TO_ALPHA, 0);
-            camera.addTarget(0, (e.getY() - y) * Y_TO_Y, 0);
+            camera.addTarget(0, (e.getY() - y) * Y_TO_Y / height * ModelConstants.FLOOR_GAP, 0);
           } else {
             float deltaX = e.getX() - x;
             float deltaY = e.getY() - y;
@@ -272,9 +269,7 @@ public class OpenglRenderer implements GLSurfaceView.Renderer{
     return true;
   }
   private void clearSelectedShop() {
-    //removePathButton();
     selectedShopModel = null;
-    //TODO check
     Parameter.getInstance().setSelectedShop(null, null);
     Parameter.getInstance().requestRender();
   }
@@ -310,48 +305,41 @@ public class OpenglRenderer implements GLSurfaceView.Renderer{
     }
 
     if(touch) {
+
       GLES20.glClearColor(1, 1, 1, 1.0f);
       GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-      Model.pickDrawStart();//draw everything with different colors.
+
       if(mallModel != null)
         mallModel.pick();
 
       //read the color.
-      ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(4);
-      pixelBuffer.order(ByteOrder.nativeOrder());
+      ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
       //height - y because y comes from touch event, not opengl.
       GLES20.glReadPixels((int) x, height - (int) y, 1, 1, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, pixelBuffer);
       byte c[] = new byte[3];
       int b[] = new int[3];
       pixelBuffer.get(c);
-      for(int i = 0; i != 3; i++) { // convert signed bytes to (un)signed integers.
-        b[i] = c[i];
-        if(b[i] < 0)
-          b[i] += 256;
-      }
+      for(int i = 0; i != 3; i++) // convert signed bytes to (un)signed integers.
+        b[i] = (c[i] + 256) % 256;
       if(x + y != 0) {
         //Log.v("Pick", "" + x + " " + y + " color " + b[0] + " " + b[1] + " " + b[2]);
         Model model = Model.pickMesh(b);
 
         selectMesh(model, x, y);
       }
-      Model.pickDrawEnd();
 
       // consume the event.
       touch = false;
       x = 0;
       y = 0;
     }
+
     // do the rendering
     GLES20.glClearColor(0.988f, 0.961f, 0.890f, 1.0f);
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
     if(mallModel != null)
-      mallModel.draw(selectedShopModel==null);
-
-    if(contextLost)
-      Parameter.getInstance().requestRender();
-    contextLost = false;
+      mallModel.draw();
 
     System.out.println("Renderer frame time = " + (System.currentTimeMillis() - time) + "ms");
   }
@@ -373,12 +361,20 @@ public class OpenglRenderer implements GLSurfaceView.Renderer{
     } else {
       setSelectShop(x, y, null, null);
     }
-
   }
 
+
   private void setSelectShop(float x, float y, Shop shop, ShopModel shopModel) {
-    selectedShopModel = shopModel;
-    Parameter.getInstance().setSelectedShop(shop, new Point((int) x, (int) y));
+    if(lastSelectedShopModel == shopModel && shopModel!=null) {
+      lastSelectedShopModel = null;
+      selectedShopModel = null;
+      Parameter.getInstance().setSelectedShop(null, null);
+    } else {
+      selectedShopModel = shopModel;
+      if(selectedShopModel!=null)
+        lastSelectedShopModel = shopModel;
+      Parameter.getInstance().setSelectedShop(shop, new Point((int) x, (int) y));
+    }
   }
 
   public void touch(float x, float y) {
@@ -390,25 +386,23 @@ public class OpenglRenderer implements GLSurfaceView.Renderer{
 
   //---------------------------------------
   //---------------Pipelines---------------
-
-  private Pipeline[] pipelines = new Pipeline[PipelineName.maxIndex];
-
-  private void initPipelines() {
-    pipelines[PIPELINE_COLOR.get()] = new PipelineColor();
-    pipelines[PIPELINE_COLORBUFFER.get()] = new PipelineColorBuffer();
-    pipelines[PIPELINE_LINESTRIP.get()] = new PipelineLineStrip();
-    pipelines[PIPELINE_TEXTURE.get()] = new PipelineTexture();
+  private Pipeline[] pipelines = new Pipeline[Pipeline.COUNT];
+  private void loadPipelines() {
+    pipelines[Pipeline.PIPELINE_COLOR] = new PipelineColor();
+    pipelines[Pipeline.PIPELINE_COLORBUFFER] = new PipelineColorBuffer();
+    pipelines[Pipeline.PIPELINE_LINESTRIP] = new PipelineLine();
+    pipelines[Pipeline.PIPELINE_TEXTURE] = new PipelineTexture();
+    pipelines[Pipeline.PIPELINE_BILLBOARDXZ] = new PipelineBillboardXZ();
+    pipelines[Pipeline.PIPELINE_BILLBOARDXZ_PICK] = new PipelineBillboardXZPick();
   }
 
-  public void addMesh(PipelineName pipelineName, Mesh mesh) {
-    pipelines[pipelineName.get()].add(mesh);
+  public void addMesh(Mesh mesh, int pipeline) {
+    pipelines[pipeline].add(mesh);
   }
 
   public void allFlush() {
-    for(int i=0; i!= PipelineName.maxIndex; i++) {
-      Pipeline pipeline = pipelines[i];
-      if(pipeline!=null)
-        pipeline.flush();
+    for(int i=0; i!= Pipeline.COUNT; i++) {
+      pipelines[i].flush();
     }
   }
 

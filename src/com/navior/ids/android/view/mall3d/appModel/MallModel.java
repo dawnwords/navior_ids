@@ -19,9 +19,12 @@ import android.util.SparseIntArray;
 import com.navior.ids.android.data.Parameter;
 import com.navior.ids.android.view.mall3d.OpenglRenderer;
 import com.navior.ids.android.view.mall3d.model.Model;
+import com.navior.ids.android.view.mall3d.model.ModelPacman;
+import com.navior.ids.android.view.mall3d.pass.Pass;
 import com.navior.ids.android.view.mall3d.util.AABB;
 import com.navior.ids.android.view.mall3d.util.ThirdPersonCamera;
 import com.navior.ips.model.Floor;
+import com.navior.ips.model.Location;
 import com.navior.ips.model.Mall;
 import com.navior.ips.model.POP;
 import com.navior.ips.model.Path;
@@ -29,7 +32,7 @@ import com.navior.ips.model.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MallModel extends Model {
+public class MallModel {
   private boolean loaded;
   private Mall mall;
 //  private float[] d = new float[5000000];
@@ -49,7 +52,7 @@ public class MallModel extends Model {
   private float minX, maxX, minY, maxY;
   private float cx, cy;
 
-  LocationModel locationModel = new LocationModel(10);
+//  LocationModel locationModel = new LocationModel(10);
 
   public MallModel(Mall mall) {
     this.mall = mall;
@@ -59,9 +62,13 @@ public class MallModel extends Model {
   public void load() {
     if(loaded) return;
 
+    Model.pickDrawStart();
+
     long t = System.currentTimeMillis();
     List<Floor> floors = mall.getL();
     float floorHeight = 0;
+
+    ModelConstants.FLOOR_GAP = ModelConstants.FLOOR_GAP_RADIO * (mall.getW() + mall.getH());
 
     for(Floor floor : floors) {
       FloorModel floorModel = new FloorModel(floor, floorHeight);
@@ -80,22 +87,17 @@ public class MallModel extends Model {
     maxY = aabb.getMaxY();
 
     SparseIntArray floorId2Index = new SparseIntArray();
-    for(int i = 0; i != floors.size(); i++) {
-      floorId2Index.put(floors.get(i).getId(), i);
-    }
     SparseArray<POP> popId2pop = new SparseArray<POP>();
-    for(Floor floor : mall.getL()) {
+    for(int i = 0; i != floors.size(); i++) {
+      Floor floor = floors.get(i);
+      floorId2Index.put(floor.getId(), i);
       for(POP pop : floor.getPops()) {
         popId2pop.put(pop.getId(), pop);
       }
     }
     for(Path path : mall.getPs()) {
-      path.setPoint1(popId2pop.get(path.getP1()));
-      path.setPoint2(popId2pop.get(path.getP2()));
-    }
-    for(Path path : mall.getPs()) {
-      POP a = path.getPoint1();
-      POP b = path.getPoint2();
+      POP a = popId2pop.get(path.getP1());
+      POP b = popId2pop.get(path.getP2());
       if(a.getFloorId() != b.getFloorId()) {
         int f1 = floorId2Index.get(a.getFloorId());
         int f2 = floorId2Index.get(b.getFloorId());
@@ -107,7 +109,6 @@ public class MallModel extends Model {
           floorModels.get(f2).addTunnel(tunnel);
       }
     }
-
 
     ThirdPersonCamera camera = OpenglRenderer.getInstance().getCamera();
     camera.setTarget(cx, 0, cy);
@@ -125,11 +126,10 @@ public class MallModel extends Model {
     loaded = true;
 
     t = System.currentTimeMillis() - t;
-    Log.i("[ips]Mall", "处理该商店消耗" + t + "ms");
+    System.out.println("Renderer 处理该商店消耗" + t + "ms");
     OpenglRenderer.getInstance().dismissDialog();
   }
 
-  @Override
   public void pick() {
     if(!loaded) {
       load();
@@ -145,6 +145,8 @@ public class MallModel extends Model {
 
     c.action();
 
+    OpenglRenderer.getInstance().currentAlpha.set(1f);
+
     if(Parameter.getInstance().isView3D()) {
       for(FloorModel floorModel : floorModels) {
         floorModel.pick();
@@ -155,9 +157,7 @@ public class MallModel extends Model {
     OpenglRenderer.getInstance().allFlush();
   }
 
-  float ry = 0;
-  @Override
-  public void draw(boolean selected) {
+  public void draw() {
     if(!loaded) {
       load();
     }
@@ -166,33 +166,30 @@ public class MallModel extends Model {
     float r = (float) Math.sqrt(mx * mx + my * my);
     ThirdPersonCamera c = OpenglRenderer.getInstance().getCamera();
     float d = c.getDistance();
-    float near = 10f, far = d + r;
+    float near = 10f, far = d*2 + r;
     c.setZNear(near); // necessary for precision
     c.setZFar(far);
 
     c.action();
 
-
-//    OpenglRenderer.currentAlpha = 1f;
-//    Location location = new Location();
-//    location.setX(300f);
-//    location.setY(300f);
-//    location.setFloorId(mall.getL().get(0).getId());
-//    ry+=1f;
-//    locationModel.setLocation(location, ry);
-//    locationModel.draw();
-
     if(route!=null) {
-      route.draw(selected);
+      route.draw();
     }
 
+//    Location l = new Location();
+//    l.setFloorId(mall.getL().get(0).getId());
+//    l.setX(150f);
+//    l.setY(200f);
+//
+//    locationModel.setLocation(l, 1);
+//    locationModel.draw(Pass.PASS_DRAW);
 
     if(Parameter.getInstance().isView3D()) {
       for(FloorModel floorModel : floorModels) {
-        floorModel.draw(selected);
+        floorModel.draw();
       }
     } else {
-      floorModels.get(Parameter.getInstance().getCurrentFloorIndex()).draw(selected);
+      floorModels.get(Parameter.getInstance().getCurrentFloorIndex()).draw();
     }
     OpenglRenderer.getInstance().allFlush();
   }

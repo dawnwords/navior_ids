@@ -19,13 +19,16 @@ import android.graphics.Typeface;
 import android.opengl.GLES20;
 import android.util.SparseArray;
 
-import com.navior.ids.android.data.Parameter;
 import com.navior.ids.android.view.mall3d.OpenglRenderer;
-import com.navior.ids.android.view.mall3d.model.Model;
+import com.navior.ids.android.view.mall3d.model.ArrayColor;
+import com.navior.ids.android.view.mall3d.model.ArrayColorIndexed;
+import com.navior.ids.android.view.mall3d.model.ArrayLine;
+import com.navior.ids.android.view.mall3d.model.ArrayQuad;
 import com.navior.ids.android.view.mall3d.model.ModelColor;
 import com.navior.ids.android.view.mall3d.model.ModelColorIndexed;
-import com.navior.ids.android.view.mall3d.model.ModelLineStrip;
+import com.navior.ids.android.view.mall3d.model.ModelLine;
 import com.navior.ids.android.view.mall3d.model.ModelQuad;
+import com.navior.ids.android.view.mall3d.pass.Pass;
 import com.navior.ids.android.view.mall3d.util.AABB;
 import com.navior.ids.android.view.mall3d.util.Combiner;
 import com.navior.ids.android.view.mall3d.util.Holder;
@@ -38,60 +41,77 @@ import com.navior.ips.model.type.ShapeType;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FloorModel extends Model {
+public class FloorModel {
   private Floor floor;
 
-  private List<ShopModel> shopModels = new ArrayList<ShopModel>();
+  //combined models for rendering shops
   private List<ModelColor> walls = new ArrayList<ModelColor>();
   private List<ModelColorIndexed> roofs = new ArrayList<ModelColorIndexed>();
-  private List<ModelLineStrip> edges = new ArrayList<ModelLineStrip>();
+  private List<ModelLine> edges = new ArrayList<ModelLine>();
+
+  //other kinds of models
+  private ArrayList<ShopModel> bgs = new ArrayList<ShopModel>();
   private ArrayList<IconModel> iconModels = new ArrayList<IconModel>();
-  private ArrayList<ShopModel> bg = new ArrayList<ShopModel>();
   private ArrayList<TunnelModel> tunnels = new ArrayList<TunnelModel>();
   private ArrayList<ModelQuad> nameQuads;
-  private float height = 0;
 
-  private final ArrayList<String> names;
-  private final ArrayList<float[]> coordinates;
-
-  private AABB aabb = new AABB();
+  //keep the related icon so that it can be highlighted too.
   private List<ModelQuad> shopIcons;
+  public List<ModelQuad> getShopIcons() { return shopIcons; }
+  public void setShopIcons(List<ModelQuad> shopIcons) { this.shopIcons = shopIcons; }
 
-  public AABB getAABB() {
-    return aabb;
-  }
+  //bounding-box for double-tap zooming
+  private AABB aabb = new AABB();
+  public AABB getAABB() { return aabb; }
 
   public FloorModel(Floor floor, final float floorHeight) {
     this.floor = floor;
-    this.height = floorHeight;
 
+    //map shop id to 
     List<Shop> shops = floor.getG();
     SparseArray<Shop> shopMap = new SparseArray<Shop>(shops.size());
+    SparseArray<ShopModel> shopModelMap = new SparseArray<ShopModel>(shops.size());
 
+
+    List<ArrayColor> shopWallData = new ArrayList<ArrayColor>();
+    List<ModelColor> shopWallReference = new ArrayList<ModelColor>();
+    List<ArrayColorIndexed> shopRoofData = new ArrayList<ArrayColorIndexed>();
+    List<ModelColorIndexed> shopRoofReference = new ArrayList<ModelColorIndexed>();
+    List<ArrayLine> shopEdgeData = new ArrayList<ArrayLine>();
+    List<ModelLine> shopEdgeReference = new ArrayList<ModelLine>();
+
+    List<ShopModel> shopModels = new ArrayList<ShopModel>();
     for(Shop shop : shops) {
       shopMap.put(shop.getId(), shop);
 
       if(shop.getT() == ShapeType.BG.getValue()) {
 
         ShopModel shopModel = new ShopModel(shop, true, floorHeight);
-        if(shopModel.getWall()!=null && shopModel.getWall().getVertexArray()!=null) {
-          shopModel.getWall().finishNewArray();
-          shopModel.getRoof().finishNewArray();
-          shopModel.getEdge().finishLine();
-          bg.add(shopModel);
+        if(shopModel.isValid()) {
+          shopModel.getWall().finish(shopModel.getWallData());
+          shopModel.getRoof().finish(shopModel.getRoofData());
+          shopModel.getEdge().finish(shopModel.getEdgeData());
+          bgs.add(shopModel);
         }
         aabb.combine(shopModel.getAABB());
+
+        shopModelMap.put(shop.getId(), shopModel);
 
       } else if(shop.getT() != ShapeType.PICON.getValue()) {
 
         ShopModel shopModel = new ShopModel(shop, false, floorHeight);
-        if(shopModel.getWall()!=null && shopModel.getWall().getVertexArray()!=null) {
+        if(shopModel.isValid()) {
           shopModels.add(shopModel);
-          walls.add(shopModel.getWall());
-          roofs.add(shopModel.getRoof());
-          edges.add(shopModel.getEdge());
+          shopWallData.add(shopModel.getWallData());
+          shopWallReference.add(shopModel.getWall());
+          shopRoofData.add(shopModel.getRoofData());
+          shopRoofReference.add(shopModel.getRoof());
+          shopEdgeData.add(shopModel.getEdgeData());
+          shopEdgeReference.add(shopModel.getEdge());
         }
         aabb.combine(shopModel.getAABB());
+
+        shopModelMap.put(shop.getId(), shopModel);
 
       } else {
 
@@ -101,13 +121,18 @@ public class FloorModel extends Model {
       }
     }
 
-    walls = ModelColor.combine(walls); //triangle_strips -> triangle_strips
-    roofs = ModelColorIndexed.combine(roofs); //triangles -> triangles
-    edges = ModelLineStrip.combine(edges); //lines -> lines
+    walls = ModelColor.combine(shopWallData, shopWallReference); //triangle_strips -> triangle_strips
+    roofs = ModelColorIndexed.combine(shopRoofData, shopRoofReference); //triangles -> triangles
+    edges = ModelLine.combine(shopEdgeData, shopEdgeReference); //lines -> lines
+
+    for(ShopModel shopModel : shopModels) {
+      shopModel.clearArrayData();
+    }
 
     //names
-    names = new ArrayList<String>();
-    coordinates = new ArrayList<float[]>();
+    ArrayList<POI> namePOI = new ArrayList<POI>();
+    ArrayList<String> names = new ArrayList<String>();
+    ArrayList<float[]> coordinates = new ArrayList<float[]>();
 
     //map poi -> shop
     shopIcons = new ArrayList<ModelQuad>();
@@ -115,22 +140,27 @@ public class FloorModel extends Model {
     for(final POI poi : pois) {
       Shop shop = shopMap.get(poi.getShopId());
       if(shop.getT() == ShapeType.STR.getValue()) {
-        if(shop.getNm() != null) {
-          if(shop.getLogo() != null) {
-            Holder<Integer> texture = OpenglUtil.getTextureSetSerialNumber().load(shop.getLogo());
-            shopIcons.add(new ModelQuad( texture,
-                0, 1, 1, 0,
-                poi.getX(), floorHeight + ModelConstants.ICON_HEIGHT, poi.getY(),
-                ModelConstants.ICON_SIZE * 2, ModelConstants.ICON_SIZE
-                ));
-            Parameter.getInstance().requestRender();
+        if(shop.getLogo() != null) {
+          Holder<Integer> texture = OpenglUtil.getTextureSetSerialNumber().load(shop.getLogo());
+          ModelQuad icon;
+          shopIcons.add(icon = new ModelQuad(texture,
+              0, 1, 1, 0,
+              poi.getX(), floorHeight + ModelConstants.ICON_HEIGHT, poi.getY(),
+              ModelConstants.ICON_SIZE * 2, ModelConstants.ICON_SIZE
+          ));
 
-          } else {
-            names.add(shop.getNm());
-            coordinates.add(new float[]{poi.getX(), poi.getY()});
-          }
+          ShopModel shopModel = shopModelMap.get(poi.getShopId());
+          shopModel.setShopIcon(icon);
+        } else if(shop.getNm() != null) {
+          namePOI.add(poi);
+          names.add(shop.getNm());
+          coordinates.add(new float[]{poi.getX(), poi.getY()});
         }
       }
+    }
+    nameQuads = generateNameQuads(names, coordinates, floorHeight);
+    for(int i=0, size=nameQuads.size(); i!=size; i++) {
+      shopModelMap.get(namePOI.get(i).getShopId()).setShopIcon(nameQuads.get(i));
     }
 
   }
@@ -139,84 +169,76 @@ public class FloorModel extends Model {
     tunnels.add(tunnel);
   }
 
-  public float getFloorHeight() {
-    return height;
-  }
-
-  public ArrayList<ShopModel> getBg() {
-    return bg;
-  }
-
-  private static float lerp(float bottom, float top, float min, float max, float value) {
-    if(value < bottom) return min;
-    if(value > top) return max;
-    if(top == bottom) return top;
-    float x = (value - bottom) / (top - bottom);
-    return max * x + min * (1 - x);
-  }
-
-  @Override
-  public void draw(boolean selected) {
+  public void draw() {
     ShopModel selectedShopModel = OpenglRenderer.getInstance().getSelectedShopModel();
     boolean here = false;
     if(selectedShopModel!=null) {
-      selected = false;
       if(selectedShopModel.getShop().getFloorId() == floor.getId()) {
         here = true;
       }
+      OpenglRenderer.getInstance().currentAlpha.set(ModelConstants.UNSELECTED_ALPHA);
+    } else {
+      OpenglRenderer.getInstance().currentAlpha.set(ModelConstants.SELECTED_ALPHA);
     }
 
-    for(ShopModel bg : getBg()) {
-      bg.draw(selected);
+    for(ShopModel bg : bgs) {
+      bg.draw();
     }
 
     for(ModelColorIndexed roof : roofs) {
-      roof.draw(selected);
+      roof.draw(Pass.PASS_DRAW);
     }
     for(ModelColor wall : walls) {
-      wall.draw(selected);
+      wall.draw(Pass.PASS_DRAW);
     }
-    for(ModelLineStrip edge : edges) {
-      edge.draw(selected);
+    for(ModelLine edge : edges) {
+      edge.draw(Pass.PASS_DRAW);
     }
-
-    if(here)
-      selectedShopModel.draw(true);
-
     OpenglRenderer.getInstance().allFlush();
 
-    for(IconModel iconModel : iconModels) {
-      iconModel.draw(selected);
+    if(here) {
+      OpenglRenderer.getInstance().currentAlpha.set(ModelConstants.SELECTED_ALPHA);
+      selectedShopModel.draw();
+
+      if(selectedShopModel.getShopIcon() !=null)
+        selectedShopModel.getShopIcon().draw(Pass.PASS_DRAW);
+
+      OpenglRenderer.getInstance().allFlush();
+      OpenglRenderer.getInstance().currentAlpha.set(ModelConstants.UNSELECTED_ALPHA);
     }
 
-    if(nameQuads == null || OpenglRenderer.getInstance().isContextLost()) {
-      nameQuads = generateNameQuads(names, coordinates, height);
+    for(IconModel iconModel : iconModels) {
+      iconModel.draw();
     }
-    if(nameQuads!=null)
-      for(ModelQuad b : nameQuads) {
-        b.draw(selected);
-      }
+    for(ModelQuad b : nameQuads) {
+      b.draw(Pass.PASS_DRAW);
+    }
     for(ModelQuad b : shopIcons) {
-      b.draw(selected);
+      b.draw(Pass.PASS_DRAW);
     }
 
     GLES20.glDepthMask(false);
     OpenglRenderer.getInstance().allFlush();
     GLES20.glDepthMask(true);
 
+    OpenglRenderer.getInstance().currentAlpha.set(ModelConstants.TUNNEL_ALPHA);
     for(TunnelModel tunnel : tunnels) {
-      tunnel.draw(selected);
+      tunnel.draw(Pass.PASS_DRAW);
     }
     OpenglRenderer.getInstance().allFlush();
+    OpenglRenderer.getInstance().currentAlpha.set(ModelConstants.SELECTED_ALPHA);
   }
-  @Override
+
   public void pick() {
-    for(ShopModel bg : getBg()) {
+    for(ShopModel bg : bgs) {
       bg.pick();
     }
 
-    for(ShopModel shopModel : shopModels) {
-      shopModel.pick();
+    for(ModelColorIndexed roof : roofs) {
+      roof.draw(Pass.PASS_PICK);
+    }
+    for(ModelColor wall : walls) {
+      wall.draw(Pass.PASS_PICK);
     }
 
     for(IconModel iconModel : iconModels) {
@@ -226,7 +248,7 @@ public class FloorModel extends Model {
 
 
   // generate billboards with given names.
-  private ArrayList<ModelQuad> generateNameQuads(final ArrayList<String> names, ArrayList<float[]> coordinates, float floorHeight) {
+  private ArrayList<ModelQuad> generateNameQuads(final ArrayList<String> names, final ArrayList<float[]> coordinates, final float floorHeight) {
     final List<Bitmap> allBitmaps;
 
     // setup pen.
@@ -254,44 +276,45 @@ public class FloorModel extends Model {
     final Canvas canvas = new Canvas();
     canvas.drawColor(0x00ffffff);
 
-    ArrayList<ModelQuad> result = new ArrayList<ModelQuad>();
+    final ArrayList<ModelQuad> result = new ArrayList<ModelQuad>();
     // start printing
-    final ArrayList<Bitmap> images = new ArrayList<Bitmap>(); // image for each billboard.
     final float[][] pixelTexcoord = new float[names.size()][2]; // top left pixel coordinates for each billboard.
 
-    final int finalActualWidth = actualWidth;
-    allBitmaps = new Combiner<String, Bitmap>() {
+    final int finalActualSize = actualWidth;
+    final float actualWidthD1 = 1f / finalActualSize;
+    new Combiner<String, Bitmap>() {
       int i = 0;
       float width;
       Bitmap bmp;
       float x, y;
+      int beginIndex, endIndex;
 
       @Override
       protected boolean beyondLimit(String s) {
         width = widths[i];
-        if(x + width >= finalActualWidth) { // new line
+        if(x + width >= finalActualSize) { // new line
           y += height;
           x = 0;
-          if(y + fm.descent > finalActualWidth) { // new texture.
+          if(y + fm.descent > finalActualSize) { // new texture.
             return true;
           }
         }
         return false;
       }
+
       @Override
       protected Bitmap open() {
-        bmp = Bitmap.createBitmap(finalActualWidth, finalActualWidth, Bitmap.Config.ARGB_8888);
+        bmp = Bitmap.createBitmap(finalActualSize, finalActualSize, Bitmap.Config.ARGB_8888);
         canvas.setBitmap(bmp);
         x = 0;
         y = -fm.ascent;
+        beginIndex = i;
         return bmp;
       }
       @Override
       protected void combine(String name, Bitmap o) {
         canvas.drawText(name, x, y, p);
 
-        //save info
-        images.add(bmp);
         pixelTexcoord[i][0] = x;
         pixelTexcoord[i][1] = y;
 
@@ -299,42 +322,35 @@ public class FloorModel extends Model {
 
         i++;
       }
+
       @Override
       protected void close(Bitmap o) {
+        endIndex = i;
 
+        Holder<Integer> texture = new Holder<Integer>(OpenglUtil.getTextureBitmap(o));
+        ArrayQuad combinedQuad = new ArrayQuad(endIndex - beginIndex, texture);
+
+        for(int i=beginIndex; i!=endIndex; i++) {
+          float x = pixelTexcoord[i][0];
+          float y = pixelTexcoord[i][1];
+          float left = x * actualWidthD1;
+          float right = (x + widths[i]) * actualWidthD1;
+          float top = 1 - (y + fm.ascent) * actualWidthD1;
+          float bottom = 1 - (y + fm.descent) * actualWidthD1;
+
+          combinedQuad.addQuad(
+              coordinates.get(i)[0], floorHeight + ModelConstants.TEXT_HEIGHT, coordinates.get(i)[1], //xyz
+              widths[i] / height * ModelConstants.TEXT_QUAD_SIZE/2, ModelConstants.TEXT_QUAD_SIZE/2, //center xy
+              left, right, top, bottom //texcoord
+          );
+        }
+        result.add(new ModelQuad(combinedQuad));
+        o.recycle();
       }
     }.run(names);
 
-    float x, y;
-    Bitmap lastImage = null;
-    int currentTexture = -1;
-    for(int i = 0; i != names.size(); i++) {
-      Bitmap currentImage = images.get(i);
-      if(currentImage != lastImage) {
-        currentTexture = OpenglUtil.getTextureBitmap(currentImage);
-        lastImage = currentImage;
-      }
-
-      x = pixelTexcoord[i][0];
-      y = pixelTexcoord[i][1];
-
-      float left = x / (float) actualWidth;
-      float right = (x + widths[i]) / (float) actualWidth;
-      float top = 1 - (y + fm.ascent) / (float) actualWidth;
-      float bottom = 1 - (y + fm.descent) / (float) actualWidth;
-
-      ModelQuad b = new ModelQuad(new Holder<Integer>(currentTexture), left, top, right, bottom,
-          coordinates.get(i)[0], floorHeight + ModelConstants.TEXT_HEIGHT, coordinates.get(i)[1],
-          widths[i] / height * ModelConstants.TEXT_QUAD_SIZE, ModelConstants.TEXT_QUAD_SIZE);
-
-      result.add(b);
-    }
-
-    for(Bitmap bitmap : allBitmaps) {
-      bitmap.recycle();
-    }
-
     return result;
   }
+
 }
 

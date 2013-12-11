@@ -5,6 +5,7 @@ import android.opengl.Matrix;
 
 import com.navior.ids.android.data.Parameter;
 import com.navior.ids.android.view.mall3d.model.ModelPacman;
+import com.navior.ids.android.view.mall3d.pass.Pass;
 import com.navior.ips.model.Floor;
 import com.navior.ips.model.Location;
 import com.navior.ips.model.Mall;
@@ -44,24 +45,22 @@ public class LocationModel extends ModelPacman {
     this.theta = theta;
   }
 
-  @Override
   public void pick() {
 //    super.pick();
   }
 
-  @Override
-  public void draw(boolean selected) {
+  public void draw() {
     if(Parameter.getInstance().isView3D()) {
       Matrix.setIdentityM(matrixWorld, 0);
       Matrix.translateM(matrixWorld, 0, x,y,z);
       Matrix.rotateM(matrixWorld, 0, theta, 0,1,0);
-      super.draw(selected);
+      super.draw(Pass.PASS_DRAW);
     } else {
       Matrix.setIdentityM(matrixWorld, 0);
       Matrix.translateM(matrixWorld, 0, x,y,z);
       Matrix.rotateM(matrixWorld, 0, theta, 0,1,0);
       Matrix.rotateM(matrixWorld, 0, 90f, 1,0,0);
-      super.draw(selected);
+      super.draw(Pass.PASS_DRAW);
     }
   }
 

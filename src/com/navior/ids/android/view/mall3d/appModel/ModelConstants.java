@@ -2,7 +2,8 @@ package com.navior.ids.android.view.mall3d.appModel;
 
 public class ModelConstants {
 
-  public static final float FLOOR_GAP = 300.0f;
+  public static final float FLOOR_GAP_RADIO = 0.25f;
+  public static float FLOOR_GAP = 300.0f;
 
   public static final float FLOOR_ALPHA_MIN = 1f;
   public static final float FLOOR_ALPHA_MAX = 1f;
@@ -17,7 +18,7 @@ public class ModelConstants {
   public static final float UNSELECTED_ALPHA = 0.4f;
 
   public static final float TEXT_HEIGHT = 22.0f;
-  public static final float TEXT_QUAD_SIZE = 15.0f;
+  public static final float TEXT_QUAD_SIZE = 30.0f;
   public static final String TEXT_FONT_NAME = "黑体";
   public static final int TEXT_SIZE = 48;
   public static final int TEXT_COLOR = 0xfff47920;
@@ -38,7 +39,7 @@ public class ModelConstants {
   public static final float LANDSCAPE_FOVY = 21f;
   public static final float PORTRAIT_FOVY = 45f;
   public static float EDGE_WIDTH = 5.0f;
-  public static final float REFERENCE_EDGE_WIDTH = 5.0f / 1920.0f;
+  public static final float EDGE_WIDTH_RADIO = 5.0f / 1920.0f;
 
   public static final float DUPLICATE_VERTEX_ANGLE_THRESHOLD = 0.5f;
   public static final float BEZIER_DIVIDE_INTERVAL = 2f;
