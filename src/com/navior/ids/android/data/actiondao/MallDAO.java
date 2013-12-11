@@ -53,7 +53,7 @@ public abstract class MallDAO extends DAO<Vector<Mall>> {
   }
 
   @Override
-  protected Vector<Mall> doSelect() throws Exception {
+  protected Vector<Mall> doSelect() {
     Vector<Mall> malls = new Vector<Mall>();
     Cursor c = db.rawQuery(selectSQL(), getArgs());
     while (c.moveToNext()) {
@@ -62,9 +62,6 @@ public abstract class MallDAO extends DAO<Vector<Mall>> {
       malls.add(mall);
     }
 
-    if (malls.size() == 0) {
-      throw new Exception();
-    }
     return malls;
   }
 

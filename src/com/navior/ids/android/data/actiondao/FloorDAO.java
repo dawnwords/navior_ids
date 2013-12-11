@@ -64,7 +64,7 @@ public abstract class FloorDAO extends DAO<Vector<Floor>> {
   }
 
   @Override
-  protected Vector<Floor> doSelect() throws Exception {
+  protected Vector<Floor> doSelect() {
     Vector<Floor> result = new Vector<Floor>();
     Cursor c = db.rawQuery(selectSQL(), getArgs());
     while (c.moveToNext()) {
@@ -77,9 +77,6 @@ public abstract class FloorDAO extends DAO<Vector<Floor>> {
       floor.setG(shopDAO.fetch(args));
     }
 
-    if (result.size() == 0) {
-      throw new Exception();
-    }
     return result;
   }
 

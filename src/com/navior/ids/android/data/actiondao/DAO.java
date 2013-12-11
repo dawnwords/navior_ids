@@ -16,8 +16,8 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 
-import com.navior.ids.android.data.Parameter;
 import com.navior.ids.android.data.DBHelper;
+import com.navior.ids.android.data.Parameter;
 import com.navior.ids.android.utils.Util;
 import com.navior.ips.util.DES;
 
@@ -31,12 +31,12 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
-import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.util.LinkedList;
+import java.util.List;
 
-public abstract class DAO<T extends Serializable> extends AsyncTask<Void, Void, T> {
+public abstract class DAO<T extends List> extends AsyncTask<Void, Void, T> {
   protected SQLiteDatabase db;
   private final Context context;
 
@@ -82,8 +82,12 @@ public abstract class DAO<T extends Serializable> extends AsyncTask<Void, Void, 
   protected T doInBackground(Void... params) {
     initDB();
     try {
-      //do Select
+      // do Select
       T result = doSelect();
+      // local cache miss
+      if (result == null || result.size() == 0) {
+        throw new Exception();
+      }
       closeDB();
       return result;
     } catch (Exception dbException) {
@@ -102,9 +106,11 @@ public abstract class DAO<T extends Serializable> extends AsyncTask<Void, Void, 
           Action result = Util.getGson().fromJson(EntityUtils.toString(response.getEntity()), Action.class);
           if (result != null && result.getD() != null) {
             final T t = Util.getGson().fromJson(DES.decrypt(result.getD()), getType());
+            // start inserting thread
             new Thread() {
               @Override
               public void run() {
+                // do Insert
                 doInsert(t);
                 closeDB();
               }
@@ -143,19 +149,53 @@ public abstract class DAO<T extends Serializable> extends AsyncTask<Void, Void, 
     }
   }
 
+  /**
+   * Gson needs Type to parse json to object.
+   * We can't get the Type directly from a Generic Type of java.
+   * So DAO needs its subclass to tell the true Type of the Genetic Type given.
+   *
+   * @return the Type of Genetic Type defined by DAO
+   */
   protected abstract Type getType();
 
+  /**
+   * @param pairs the HTTP Post arguments as NameValuePair for subclass to complete
+   */
   protected abstract void setNameValuePair(LinkedList<BasicNameValuePair> pairs);
 
+  /**
+   * @return the arguments array for SQL Selection
+   */
   protected abstract String[] getArgs();
 
+  /**
+   * @return the URL where the HTTPClient fetches data
+   */
   protected abstract String getUrl();
 
-  protected abstract T doSelect() throws Exception;
+  /**
+   * Selecting Operation in local DB for subclass to define
+   *
+   * @return DB selection results
+   */
+  protected abstract T doSelect();
 
+  /**
+   * Inserting Operation in local DB for subclass to define
+   *
+   * @param result for subclass to insert into DB
+   */
   protected abstract void doInsert(T result);
 
+  /**
+   * Callback Method after fetching the data successfully
+   *
+   * @param result given to subclass to use
+   */
   protected abstract void doSuccess(T result);
 
+  /**
+   * Callback Method if fetching data fails
+   */
   protected abstract void doException();
 }

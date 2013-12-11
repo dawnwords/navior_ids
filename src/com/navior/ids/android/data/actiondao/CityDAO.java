@@ -54,14 +54,11 @@ public abstract class CityDAO extends DAO<Vector<City>> {
   }
 
   @Override
-  protected Vector<City> doSelect() throws Exception {
+  protected Vector<City> doSelect() {
     Vector<City> result = new Vector<City>();
     Cursor c = db.rawQuery("SELECT * FROM d_city", null);
     while (c.moveToNext()) {
       result.add(parser.getModel(c));
-    }
-    if (result.size() == 0) {
-      throw new Exception();
     }
     return result;
   }
