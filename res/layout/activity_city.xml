@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <FrameLayout style="@style/TitleBar">
+
+        <TextView
+                style="@style/NavTitle"
+                android:text="@string/city_list"/>
+
+        <com.navior.ids.android.view.button.ReturnButton
+                android:id="@+id/city_return"
+                style="@style/NavButton.left"/>
+
+    </FrameLayout>
+
+    <com.navior.ids.android.view.list.CityIndexListView
+            android:id="@+id/city_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+</LinearLayout>

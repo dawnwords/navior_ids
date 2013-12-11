@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:myapp="http://schemas.android.com/apk/res/com.navior.ids.android"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+        <FrameLayout style="@style/TitleBar">
+
+            <ImageView
+                    style="@style/NavTitleLogo"/>
+
+            <com.navior.ids.android.view.button.CitySelectButton
+                    style="@style/NavButton.left"
+                    android:id="@+id/btn_select_city"/>
+
+            <ImageButton
+                    style="@style/NavButton.right"
+                    android:src="@drawable/nav_search"
+                    android:layout_width="@dimen/title_bar_height"
+                    android:layout_height="@dimen/title_bar_height"
+                    android:padding="@dimen/nav_btn_padding"
+                    android:background="@drawable/nav_btn_bg"
+                    android:scaleType="centerInside"/>
+        </FrameLayout>
+
+        <fragment
+                android:id="@+id/map"
+                android:name="com.amap.api.maps.SupportMapFragment"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+        <LinearLayout style="@style/FunctionBar">
+
+            <com.navior.ids.android.view.button.FunctionButton
+                    style="@style/FunctionButton"
+                    android:id="@+id/tab_me"
+                    myapp:image="@drawable/tab_me"
+                    myapp:textColor="@color/tab_me_text_color"
+                    myapp:text="@string/me"/>
+
+            <com.navior.ids.android.view.button.FunctionButton
+                    style="@style/FunctionButton"
+                    android:id="@+id/tab_nearby"
+                    myapp:image="@drawable/tab_nearby"
+                    myapp:textColor="@color/tab_text_color"
+                    myapp:text="@string/nearby"/>
+
+            <com.navior.ids.android.view.button.FunctionButton
+                    style="@style/FunctionButton"
+                    android:id="@+id/tab_mark"
+                    myapp:image="@drawable/tab_mark"
+                    myapp:textColor="@color/tab_text_color"
+                    myapp:text="@string/marker"/>
+
+            <com.navior.ids.android.view.button.FunctionButton
+                    style="@style/FunctionButton"
+                    android:id="@+id/tab_more"
+                    myapp:image="@drawable/tab_more"
+                    myapp:textColor="@color/tab_text_color"
+                    myapp:text="@string/more"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <RelativeLayout
+            android:id="@+id/outdoor_popup"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+</FrameLayout>
+

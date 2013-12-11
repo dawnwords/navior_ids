@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:paddingLeft="@dimen/popup_padding_lr"
+              android:paddingRight="@dimen/popup_padding_lr"
+              android:paddingTop="@dimen/popup_padding_tb"
+              android:paddingBottom="@dimen/popup_padding_tb"
+              android:background="@color/white"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:paddingBottom="@dimen/popup_padding_tb"
+            android:layout_height="@dimen/popup_my_location_above_h">
+
+        <LinearLayout
+                android:orientation="vertical"
+                android:layout_weight="7"
+                android:layout_width="0dp"
+                android:layout_height="match_parent">
+
+            <TextView
+                    android:id="@+id/popup_shop_nm"
+                    android:layout_weight="4"
+                    android:textSize="@dimen/font_large"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:text="shop name"/>
+
+            <TextView
+                    android:text="Shop Description"
+                    android:id="@+id/popup_shop_description"
+                    android:layout_weight="3"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"/>
+        </LinearLayout>
+
+        <Button
+                android:id="@+id/popup_my_location_marker"
+                android:background="@drawable/btn_round_orange"
+                android:textColor="@color/nav_text_color"
+                android:text="@string/marker"
+                android:layout_weight="3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+            android:background="@drawable/btn_round_white"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/popup_my_location_below_h">
+
+        <Button
+                style="@style/ShopDetailButton"
+                android:text="@string/set_as_dest"/>
+
+        <View style="@style/Divider.vertical"/>
+
+        <Button
+                style="@style/ShopDetailButton"
+                android:text="@string/shop_detail"/>
+    </LinearLayout>
+</LinearLayout>

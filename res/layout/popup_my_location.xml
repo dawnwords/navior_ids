@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:paddingLeft="@dimen/popup_padding_lr"
+              android:paddingRight="@dimen/popup_padding_lr"
+              android:paddingTop="@dimen/popup_padding_tb"
+              android:paddingBottom="@dimen/popup_padding_tb"
+              android:background="@color/white"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:paddingBottom="@dimen/popup_padding_tb"
+            android:layout_height="@dimen/popup_my_location_above_h">
+
+        <LinearLayout
+                android:orientation="vertical"
+                android:layout_weight="7"
+                android:layout_width="0dp"
+                android:layout_height="match_parent">
+
+            <TextView
+                    android:layout_weight="4"
+                    android:text="@string/myposition"
+                    android:textSize="@dimen/font_large"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"/>
+
+            <TextView
+                    android:text="Location Description"
+                    android:id="@+id/popup_my_location_description"
+                    android:layout_weight="3"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"/>
+        </LinearLayout>
+
+        <Button
+                android:id="@+id/popup_my_location_marker"
+                android:background="@drawable/btn_round_orange"
+                android:textColor="@color/nav_text_color"
+                android:text="@string/marker"
+                android:layout_weight="3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+            android:paddingTop="@dimen/popup_padding_tb"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/popup_my_location_below_h">
+
+        <EditText
+                android:background="@drawable/btn_round_white_left_half"
+                android:layout_weight="8"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:hint="@string/input_dest"/>
+
+        <Button
+                android:background="@drawable/btn_round_gray_right_half"
+                android:text="@string/navi"
+                android:layout_weight="2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"/>
+    </LinearLayout>
+</LinearLayout>

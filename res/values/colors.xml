@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="white">#fff</color>
+    <color name="gray">#525250</color>
+    <color name="orange_light">#FEA200</color>
+    <color name="myposition_fill">#8f93</color>
+    <color name="orange">#FE5400</color>
+    <color name="myposition_stroke">#8f60</color>
+    <color name="light_gray">#DCD6C8</color>
+    <color name="city_item_bg">#FBF4E2</color>
+    <color name="black">#000</color>
+</resources>

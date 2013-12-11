@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="@dimen/floor_selector_w"
+             android:layout_height="@dimen/floor_selector_h">
+
+    <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/floor_selector_bg"
+            android:scaleType="fitXY"
+            android:id="@+id/floor_selector_background"/>
+
+    <ListView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@null"
+            android:scrollbars="none"
+            android:overScrollMode="never"
+            android:id="@+id/floor_selector_list"/>
+
+    <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/floor_selector_item_h"
+            android:layout_gravity="center_vertical|left"
+            android:src="@drawable/floor_selector_pointer"
+            android:id="@+id/floor_selector_pointer"/>
+
+</FrameLayout>

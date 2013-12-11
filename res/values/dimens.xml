@@ -1,0 +1,31 @@
+<resources>
+    <dimen name="font_large">20sp</dimen>
+    <dimen name="font_small">14sp</dimen>
+    <dimen name="font_ex_small">12sp</dimen>
+    <dimen name="floor_picker_textsize">20dp</dimen>
+    <dimen name="floor_picker_offset">4dp</dimen>
+    <dimen name="title_bar_height">144px</dimen>
+    <dimen name="function_btn_size">96px</dimen>
+    <dimen name="function_bar_height">192px</dimen>
+    <dimen name="function_btn_padding">10px</dimen>
+    <dimen name="star_size">44px</dimen>
+    <dimen name="popup_top_down">20dp</dimen>
+    <dimen name="popup_left_right">40dp</dimen>
+    <dimen name="popup_mall_detail_title_height">30dp</dimen>
+    <dimen name="popup_padding_lr">30dp</dimen>
+    <dimen name="popup_padding_tb">10dp</dimen>
+    <dimen name="popup_mall_detail_btn_height">144px</dimen>
+    <dimen name="popup_mall_detail_time_width">384px</dimen>
+    <dimen name="clock_size">96px</dimen>
+    <dimen name="btn_select_city_font">20px</dimen>
+    <dimen name="nav_padding">10px</dimen>
+    <dimen name="nav_arrow_down_w">38px</dimen>
+    <dimen name="nav_arrow_down_h">14px</dimen>
+    <dimen name="nav_btn_width">192px</dimen>
+    <dimen name="nav_btn_padding">24px</dimen>
+    <dimen name="floor_selector_h">1000px</dimen>
+    <dimen name="floor_selector_w">170px</dimen>
+    <dimen name="floor_selector_item_h">200px</dimen>
+    <dimen name="popup_my_location_above_h">60dp</dimen>
+    <dimen name="popup_my_location_below_h">40dp</dimen>
+</resources>

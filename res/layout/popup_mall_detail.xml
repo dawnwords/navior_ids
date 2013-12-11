@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:paddingLeft="@dimen/popup_padding_lr"
+              android:paddingRight="@dimen/popup_padding_lr"
+              android:paddingTop="@dimen/popup_padding_tb"
+              android:paddingBottom="@dimen/popup_padding_tb"
+              android:background="@color/white"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <TextView
+            android:id="@+id/popup_mall_detail_title"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/popup_mall_detail_title_height"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:clickable="false"
+            android:textColor="@color/black"
+            android:textSize="@dimen/font_large"/>
+
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/popup_mall_detail_title_height">
+
+        <TextView
+                android:id="@+id/popup_mall_detail_tag"
+                android:text="品牌多 | 分类明确 | 价格高"
+                android:layout_alignParentLeft="true"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"/>
+
+        <LinearLayout
+                android:id="@+id/popup_mall_detail_star"
+                android:layout_alignParentRight="true"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical">
+
+            <ImageView style="@style/star.on"/>
+
+            <ImageView style="@style/star.on"/>
+
+            <ImageView style="@style/star.on"/>
+
+            <ImageView style="@style/star.on"/>
+
+            <ImageView style="@style/star.off"/>
+        </LinearLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/popup_mall_detail_btn_height">
+
+        <ImageView
+                android:id="@+id/popup_mall_clock"
+                android:layout_width="@dimen/clock_size"
+                android:layout_height="@dimen/clock_size"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/clock"
+                android:scaleType="fitXY"/>
+
+        <TextView
+                android:id="@+id/popup_mall_detail_time"
+                android:text="9:00-10:00"
+                android:layout_width="@dimen/popup_mall_detail_time_width"
+                android:layout_height="match_parent"
+                android:layout_toRightOf="@id/popup_mall_clock"
+                android:gravity="center"
+                android:textSize="@dimen/font_large"
+                android:textColor="@color/black"
+                android:layout_toLeftOf="@+id/popup_mall_detail_detail"/>
+
+
+        <Button
+                style="@style/MallDetailButton"
+                android:text="@string/go_into"
+                android:id="@+id/popup_mall_detail_enter"
+                android:background="@drawable/btn_round_orange"
+                android:layout_alignParentRight="true"/>
+
+        <Button
+                style="@style/MallDetailButton"
+                android:text="@string/detail"
+                android:id="@+id/popup_mall_detail_detail"
+                android:background="@drawable/btn_round_white"
+                android:layout_toLeftOf="@id/popup_mall_detail_enter"/>
+
+    </RelativeLayout>
+
+
+</LinearLayout>
