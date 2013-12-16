@@ -70,9 +70,11 @@ public abstract class AbstractMapActivity extends FragmentActivity implements In
     super.onPause();
   }
 
-  /************************************
-   *        USELESS INTERFACES        *
-   ************************************/
+  /**
+   * *********************************
+   * USELESS INTERFACES        *
+   * **********************************
+   */
   @Override
   public void onLocationChanged(Location location) {
   }
@@ -92,9 +94,12 @@ public abstract class AbstractMapActivity extends FragmentActivity implements In
   @Override
   public void onCameraChange(CameraPosition cameraPosition) {
   }
-  /************************************
-   *     END OF USELESS INTERFACES    *
-   ************************************/
+
+  /**
+   * *********************************
+   * END OF USELESS INTERFACES    *
+   * **********************************
+   */
 
   @Override
   public void activate(OnLocationChangedListener listener) {
@@ -135,8 +140,13 @@ public abstract class AbstractMapActivity extends FragmentActivity implements In
     return aMap.getProjection().getVisibleRegion().latLngBounds;
   }
 
+  protected void refreshMap() {
+    aMap.animateCamera(CameraUpdateFactory.newCameraPosition(aMap.getCameraPosition()));
+  }
+
   protected Marker addMallMarker(Mall mall, BitmapDescriptor markerIcon) {
     LatLng latLng = new LatLng(mall.getLat(), mall.getLng());
+
     return aMap.addMarker(new MarkerOptions().position(latLng)
         .title(mall.getNm()).snippet(mall.getAddr())
         .icon(markerIcon));

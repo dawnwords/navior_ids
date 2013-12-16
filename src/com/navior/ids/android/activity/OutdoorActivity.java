@@ -182,6 +182,7 @@ public class OutdoorActivity extends AbstractMapActivity {
       protected void doSuccess(Vector<Mall> result) {
         city.setMalls(result);
         addShowingMallMark(bounds, result);
+        refreshMap();
       }
 
       @Override

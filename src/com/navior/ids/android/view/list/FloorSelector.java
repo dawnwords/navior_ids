@@ -60,7 +60,11 @@ public class FloorSelector extends FrameLayout {
             @Override
             public void run() {
               // scroll one pixel over
-              floorListView.smoothScrollToPositionFromTop(position, -1);
+              if (isShrink) {
+                floorListView.setSelectionFromTop(position, -1);
+              } else {
+                floorListView.smoothScrollToPositionFromTop(position, -1);
+              }
             }
           });
           break;

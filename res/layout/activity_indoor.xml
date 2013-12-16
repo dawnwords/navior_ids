@@ -46,7 +46,7 @@
                     android:layout_gravity="right|top"
                     android:id="@+id/indoor_floor_selector"/>
 
-            <com.navior.ids.android.view.button.DimenSwitchButton
+            <Button
                     android:id="@+id/dimen_switcher"
                     android:layout_margin="@dimen/dimen_switcher_margin"
                     android:layout_width="@dimen/dimen_switcher_size"

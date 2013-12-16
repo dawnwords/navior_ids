@@ -21,6 +21,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.navior.ids.android.R;
@@ -48,6 +49,7 @@ import java.util.Vector;
 
 public class IndoorActivity extends Activity {
   private FloorSelector selector;
+  private Button dimenSwitcher;
   private OpenglView openglView;
   private LocatingService.LocatingBinder locator;
   private HashMap<String, POS> starMap;
@@ -117,6 +119,18 @@ public class IndoorActivity extends Activity {
 
   private void initUI() {
     setContentView(R.layout.activity_indoor);
+    selector = (FloorSelector) findViewById(R.id.indoor_floor_selector);
+    dimenSwitcher = (Button) findViewById(R.id.dimen_switcher);
+    shopPopup = new ShopDetailPopup(IndoorActivity.this);
+
+    dimenSwitcher.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        if (OpenglRenderer.getInstance().switchView()) {
+          dimenSwitcher.setBackgroundResource(OpenglRenderer.getInstance().isView3D() ? R.drawable.dimen_two : R.drawable.dimen_three);
+        }
+      }
+    });
     findViewById(R.id.indoor_return).setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -129,15 +143,7 @@ public class IndoorActivity extends Activity {
         myLocation();
       }
     });
-    findViewById(R.id.dimen_switcher).setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        switchDimension();
-      }
-    });
-
-    selector = (FloorSelector) findViewById(R.id.indoor_floor_selector);
-    shopPopup = new ShopDetailPopup(IndoorActivity.this);
+    dimenSwitcher.setBackgroundResource(OpenglRenderer.getInstance().isView3D() ? R.drawable.dimen_three : R.drawable.dimen_two);
   }
 
   private void bindLocatingService() {
@@ -192,10 +198,6 @@ public class IndoorActivity extends Activity {
       public void onServiceDisconnected(ComponentName name) {
       }
     }, BIND_AUTO_CREATE);
-  }
-
-  private void switchDimension() {
-    OpenglRenderer.getInstance().switchView();
   }
 
   private void myLocation() {

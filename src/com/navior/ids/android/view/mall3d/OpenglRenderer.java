@@ -534,8 +534,8 @@ public class OpenglRenderer implements GLSurfaceView.Renderer{
   }
   //---------------------------------------
 
-  public void switchView() {
-    if(switchingView) return;
+  public boolean switchView() {
+    if(switchingView) return false;
     switchingView = true; //not perfect but secure enough
     selectedShopModel = null;
     lastSelectedShopModel = null;
@@ -588,6 +588,7 @@ public class OpenglRenderer implements GLSurfaceView.Renderer{
         touchEnabled = true;
       }
     });
+    return true;
   }
 
 
