@@ -70,6 +70,9 @@ public abstract class AbstractMapActivity extends FragmentActivity implements In
     super.onPause();
   }
 
+  /************************************
+   *        USELESS INTERFACES        *
+   ************************************/
   @Override
   public void onLocationChanged(Location location) {
   }
@@ -85,6 +88,13 @@ public abstract class AbstractMapActivity extends FragmentActivity implements In
   @Override
   public void onProviderDisabled(String s) {
   }
+
+  @Override
+  public void onCameraChange(CameraPosition cameraPosition) {
+  }
+  /************************************
+   *     END OF USELESS INTERFACES    *
+   ************************************/
 
   @Override
   public void activate(OnLocationChangedListener listener) {
@@ -104,10 +114,6 @@ public abstract class AbstractMapActivity extends FragmentActivity implements In
   }
 
   @Override
-  public void onCameraChange(CameraPosition cameraPosition) {
-  }
-
-  @Override
   public void onCameraChangeFinish(CameraPosition cameraPosition) {
     onCameraChange(cameraPosition, aMap.getProjection().getVisibleRegion().latLngBounds);
   }
@@ -118,10 +124,6 @@ public abstract class AbstractMapActivity extends FragmentActivity implements In
     String cityCode = location.getCityCode();
     onLocationChanged(latLng, cityCode);
   }
-
-  protected abstract void onLocationChanged(LatLng latLng, String cityCode);
-
-  protected abstract void onCameraChange(CameraPosition cameraPosition, LatLngBounds bounds);
 
   protected LatLngBounds setDefaultCenter(LatLng position) {
     return setDefaultCenter(position, 15);
@@ -139,8 +141,6 @@ public abstract class AbstractMapActivity extends FragmentActivity implements In
         .title(mall.getNm()).snippet(mall.getAddr())
         .icon(markerIcon));
   }
-
-  protected abstract int getContentView();
 
   private void initMap() {
     if (aMap == null) {
@@ -169,4 +169,11 @@ public abstract class AbstractMapActivity extends FragmentActivity implements In
   private int color(int colorId) {
     return getResources().getColor(colorId);
   }
+
+  protected abstract void onLocationChanged(LatLng latLng, String cityCode);
+
+  protected abstract void onCameraChange(CameraPosition cameraPosition, LatLngBounds bounds);
+
+  protected abstract int getContentView();
+
 }

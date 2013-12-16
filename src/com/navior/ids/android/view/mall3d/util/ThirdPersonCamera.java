@@ -16,7 +16,7 @@ package com.navior.ids.android.view.mall3d.util;
 import android.opengl.Matrix;
 
 import com.navior.ids.android.data.Parameter;
-import com.navior.ids.android.view.mall3d.appModel.ModelConstants;
+import com.navior.ids.android.view.mall3d.OpenglRenderer;
 
 public class ThirdPersonCamera {
 
@@ -70,7 +70,7 @@ public class ThirdPersonCamera {
 
   public void setTarget(float x, float y, float z) {
     tx = x;
-    ty = y + ModelConstants.ICON_HEIGHT;
+    ty = y;
     tz = z;
     checkTarget();
   }
@@ -143,19 +143,19 @@ public class ThirdPersonCamera {
     beta += dBeta;
   }
 
+  private static final float pi2 = (float) (Math.PI * 2);
   private void checkAngles() {
-    final float pi2 = (float) (Math.PI * 2);
     while(alpha >= pi2) {
       alpha -= pi2;
     }
     while(alpha < 0) {
       alpha += pi2;
     }
-    if(beta > Math.PI / 3) {
-      beta = (float) (Math.PI / 3 - 0.001f);
+    if(beta >= Math.PI/2-0.009f) {
+      beta = (float) (Math.PI/2 - 0.01f);
     }
     if(beta < 0) {
-      beta = 0.001f;
+      beta = 0;
     }
   }
 
@@ -172,7 +172,7 @@ public class ThirdPersonCamera {
     float[] matrixP = new float[16];
     Matrix.perspectiveM(matrixP, 0, fovy, aspect, zNear, zFar);
 
-    if(Parameter.getInstance().isView3D()) {
+    if(OpenglRenderer.getInstance().isView3D()) {
       //3d
       direction = calcEyeDirection();
       fx = (float) (tx - direction[0]);
@@ -202,7 +202,7 @@ public class ThirdPersonCamera {
   }
 
   private double[] calcEyeDirection() {
-    float cosBeta = (float) Math.cos(beta);
+    double cosBeta = Math.cos(beta);
     return new double[]{
         -Math.cos(alpha) * cosBeta * distance,
         -Math.sin(beta) * distance,

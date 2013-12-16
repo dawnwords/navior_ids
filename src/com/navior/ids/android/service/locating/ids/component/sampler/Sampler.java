@@ -13,116 +13,128 @@
 package com.navior.ids.android.service.locating.ids.component.sampler;
 
 
-import com.navior.ids.android.service.locating.ids.data.SlidingWindowList;
+import android.renderscript.BaseObj;
+
 import com.navior.ids.android.service.locating.ids.data.RssiRecord;
+import com.navior.ids.android.service.locating.ids.data.SlidingWindowList;
 
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class Sampler {
 
-  protected boolean isReady;
-  protected RssiStorage tempStorage;
-  protected SamplerListener callerListener;
+    protected boolean isReady;
+    protected RssiStorage tempStorage;
+    protected SamplerListener callerListener;
 
-  protected Sampler( SamplerListener callerListener ) {
-      isReady = false;
-      setCallerListener( callerListener );
-    tempStorage = new RssiStorage();
-  }
+    protected Sampler(SamplerListener callerListener) {
+        isReady = false;
+        setCallerListener(callerListener);
+        tempStorage = new RssiStorage();
+    }
 
-    private void setCallerListener( SamplerListener listener ) {
+    private void setCallerListener(SamplerListener listener) {
         this.callerListener = listener;
     }
 
-  /**
-   * For locator getting records.
-   *
-   * @return
-   */
-  public LinkedList<RssiRecord> getRecords() {
-    return tempStorage.getRecords();
-  }
+    /**
+     * For locator getting records.
+     *
+     * @return
+     */
+    public LinkedList<RssiRecord> getRecords() {
+        return tempStorage.getRecords();
+    }
 
-  /**
-   * For locator checking buffer status
-   *
-   * @return
-   */
-  public boolean hasNewRecord() {
-    return tempStorage.hasNewRecord();
-  }
+    /**
+     * For locator checking buffer status
+     *
+     * @return
+     */
+    public boolean hasNewRecord() {
+        return tempStorage.hasNewRecord();
+    }
 
-  public abstract void startScan();
+    public abstract void startScan();
 
-  public abstract void stopScan();
+    public abstract void stopScan();
 
-  public abstract void reinitialize();
+    public abstract void reinitialize();
 
-  public abstract void recycle();
+    public abstract void recycle();
 
-  public boolean getState() {
-      return isReady;
-  }
+    public boolean getState() {
+        return isReady;
+    }
 
-  protected void setStateReady() {
-      isReady = true;
-      callerListener.onStateReady();
-  }
+    protected void setStateReady() {
+        isReady = true;
+        callerListener.onStateReady();
+    }
 
     protected void setStateNotReady() {
         isReady = false;
         callerListener.onStateNotReady();
     }
 
-  /**
-   * IDSLocator should implement it to receive message from sampler.
-   */
-  public interface SamplerListener {
-    void onStateReady();
+    /**
+     * IDSLocator should implement it to receive message from sampler.
+     */
+    public interface SamplerListener {
+        void onStateReady();
 
-    void onStateNotReady();
+        void onStateNotReady();
 
-    void onStartScanningError();
+        void onStartScanningError();
 
-    void onActiveBtServiceError();
+        void onActiveBtServiceError();
 
-    void onNewRecord();
-  }
-
-  protected class RssiStorage {
-
-    private SlidingWindowList<RssiRecord> slidingWindow;
-    private ConcurrentLinkedQueue<RssiRecord> buffer;
-    private boolean isReading;  // indicate someone is reading the slidingWindow
-
-    protected RssiStorage() {
-      buffer = new ConcurrentLinkedQueue<RssiRecord>();
-      slidingWindow = new SlidingWindowList<RssiRecord>();
+        void onNewRecord();
     }
 
-    protected boolean addNewRecord(RssiRecord rssiRecord) {
-      if (isReading) {
-          buffer.add(rssiRecord);
-      } else {
-        slidingWindow.add(rssiRecord);
-      }
-      return isReading;
-    }
+    protected class RssiStorage {
 
-    protected boolean hasNewRecord() {
-        isReading = !buffer.isEmpty(); // if buffer is empty, the caller thread should give up reading slidingWindow
-      return isReading;
-    }
+        private SlidingWindowList<RssiRecord> slidingWindow;
+        private ConcurrentLinkedQueue<RssiRecord> buffer;
+        private Object lock;
+        private boolean isReading;  // indicate someone is reading the slidingWindow
 
-    protected LinkedList<RssiRecord> getRecords() {
-      isReading = true;
-        slidingWindow.addAll(buffer);
-        buffer.clear();
+        protected RssiStorage() {
+            buffer = new ConcurrentLinkedQueue<RssiRecord>();
+            slidingWindow = new SlidingWindowList<RssiRecord>();
+            lock = new Object();
+        }
 
-      LinkedList<RssiRecord> result = new LinkedList<RssiRecord>();
-      result.addAll(slidingWindow);
-      return result;
+        protected boolean addNewRecord(RssiRecord rssiRecord) {
+            boolean isReadingCopy;
+            synchronized (lock) {
+                isReadingCopy = isReading;
+            }
+            if (isReadingCopy) {
+                buffer.add(rssiRecord);
+            } else {
+                slidingWindow.add(rssiRecord);
+            }
+            return isReadingCopy;
+        }
+
+        protected boolean hasNewRecord() {
+            synchronized (lock) {
+                isReading = !buffer.isEmpty(); // if buffer is empty, the caller thread should give up reading slidingWindow
+                return isReading;
+            }
+        }
+
+        protected LinkedList<RssiRecord> getRecords() {
+            synchronized (lock) {
+                isReading = true;
+            }
+            slidingWindow.addAll(buffer);
+            buffer.clear();
+
+            LinkedList<RssiRecord> result = new LinkedList<RssiRecord>();
+            result.addAll(slidingWindow);
+            return result;
+        }
     }
-  }
 }

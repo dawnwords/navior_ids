@@ -17,7 +17,6 @@ import android.opengl.GLES20;
 import com.navior.ids.android.view.mall3d.model.ArrayLine;
 import com.navior.ids.android.view.mall3d.model.ModelLine;
 import com.navior.ids.android.view.mall3d.pass.Pass;
-import com.navior.ids.android.view.mall3d.util.OpenglUtil;
 import com.navior.ips.model.Floor;
 import com.navior.ips.model.Mall;
 import com.navior.ips.model.POP;

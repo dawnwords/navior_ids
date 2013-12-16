@@ -20,7 +20,6 @@ public class ModelQuad extends ModelTexture {
 
   public static final float[] TEXCOORD = new float[]{0, 0, 1, 0, 0, 1, 1, 1};
   public static final float[] VERTEX_QUAD = new float[]{-0.5f, 0, -0.5f, 0.5f, 0, -0.5f, -0.5f, 0, 0.5f, 0.5f, 0, 0.5f};
-  public static final float[] VERTEX_BILLBOARD = new float[]{0, 1, 0.5f,  0, 1, -0.5f,  0, 0, 0.5f,  0, 0, -0.5f};
   public static final short[] INDEX = new short[]{0, 1, 2, 1, 3, 2};
 
   public ModelQuad(String fileName, float x, float y, float z, float sx, float sz) {

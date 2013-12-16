@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +34,7 @@ public class ThreePointCalculator extends Calculator {
   private final static int WEAKEST_RSSI = -200;
 
   @Override
-  public List<RssiRecord> aggregate(Iterable<RssiRecord> rssiRecords) {
+  public List<RssiRecord> aggregate(Iterable<RssiRecord> rssiRecords, HashMap<String, POS> posHashMap) {
 
     Map< String, Collection<RssiRecord> > classifiedRecords = classify( rssiRecords );
 
@@ -41,7 +42,9 @@ public class ThreePointCalculator extends Calculator {
 
     Set< String > keySet = classifiedRecords.keySet();
     for( String key : keySet ) {
-      result.add(aggregate(classifiedRecords.get(key)));
+        if(posHashMap == null || posHashMap.containsKey(key)) {
+            result.add(aggregate(classifiedRecords.get(key)));
+        }
     }
 
     Collections.sort( result, new Comparator<RssiRecord>() {
@@ -132,7 +135,6 @@ public class ThreePointCalculator extends Calculator {
     if (setSize == 1) {
       POS pos = posMap.get( aggregatedRecords.get( 0 ).getStarName() );
       if( pos == null ) {
-          System.out.println( "lack pos " + aggregatedRecords.get( 0 ).getStarName() );
           return null;
       }
 
@@ -149,7 +151,6 @@ public class ThreePointCalculator extends Calculator {
       PosDistance pd1 = new PosDistance();
       pd1.pos = posMap.get( starname1 );
         if( posMap.get( starname1 ) == null ) {
-            System.out.println( "lack pos " + starname1 );
             return null;
         }
       pd1.distance = rssi2Distance( aggregatedRecords.get( 0 ).getRssi() );
@@ -159,7 +160,6 @@ public class ThreePointCalculator extends Calculator {
       PosDistance pd2 = new PosDistance();
       pd2.pos = posMap.get( starname2 );
         if( posMap.get( starname2 ) == null ) {
-            System.out.println( "lack pos " + starname2 );
             return null;
         }
       pd2.distance = rssi2Distance( aggregatedRecords.get( 1 ).getRssi() );
@@ -173,7 +173,6 @@ public class ThreePointCalculator extends Calculator {
       PosDistance pd1 = new PosDistance();
       pd1.pos = posMap.get( starname1 );
         if( posMap.get( starname1 ) == null ) {
-            System.out.println( "lack pos " + starname1 );
             return null;
         }
       pd1.distance = rssi2Distance( aggregatedRecords.get( 0 ).getRssi() );
@@ -183,7 +182,6 @@ public class ThreePointCalculator extends Calculator {
       PosDistance pd2 = new PosDistance();
       pd2.pos = posMap.get( starname2 );
         if( posMap.get( starname2 ) == null ) {
-            System.out.println( "lack pos " + starname2 );
             return null;
         }
       pd2.distance = rssi2Distance( aggregatedRecords.get( 1 ).getRssi() );
@@ -193,7 +191,6 @@ public class ThreePointCalculator extends Calculator {
       PosDistance pd3 = new PosDistance();
       pd3.pos = posMap.get( starname3 );
         if( posMap.get( starname3 ) == null ) {
-            System.out.println( "lack pos " + starname3 );
             return null;
         }
       pd3.distance = rssi2Distance( aggregatedRecords.get( 2 ).getRssi() );

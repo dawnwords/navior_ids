@@ -40,7 +40,7 @@ public abstract class Calculator {
     return classifiedRecords;
   }
 
-  public abstract List<RssiRecord> aggregate(Iterable<RssiRecord> filteredRecords);
+  public abstract List<RssiRecord> aggregate(Iterable<RssiRecord> filteredRecords, HashMap<String, POS> posHashMap);
 
   public abstract Location calculate(List<RssiRecord> aggregatedRecords, Map<String, POS> posMap);
 

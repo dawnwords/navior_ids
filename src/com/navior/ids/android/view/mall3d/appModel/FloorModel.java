@@ -146,7 +146,7 @@ public class FloorModel {
           shopIcons.add(icon = new ModelQuad(texture,
               0, 1, 1, 0,
               poi.getX(), floorHeight + ModelConstants.ICON_HEIGHT, poi.getY(),
-              ModelConstants.ICON_SIZE * 2, ModelConstants.ICON_SIZE
+              ModelConstants.ICON_SIZE * ModelConstants.SHOP_ICON_RATIO, ModelConstants.ICON_SIZE
           ));
 
           ShopModel shopModel = shopModelMap.get(poi.getShopId());
@@ -159,10 +159,6 @@ public class FloorModel {
       }
     }
     nameQuads = generateNameQuads(names, coordinates, floorHeight);
-    for(int i=0, size=nameQuads.size(); i!=size; i++) {
-      shopModelMap.get(namePOI.get(i).getShopId()).setShopIcon(nameQuads.get(i));
-    }
-
   }
 
   public void addTunnel(TunnelModel tunnel) {
@@ -194,7 +190,13 @@ public class FloorModel {
     for(ModelLine edge : edges) {
       edge.draw(Pass.PASS_DRAW);
     }
+
+    for(IconModel iconModel : iconModels) {
+      iconModel.draw();
+    }
+
     OpenglRenderer.getInstance().allFlush();
+
 
     if(here) {
       OpenglRenderer.getInstance().currentAlpha.set(ModelConstants.SELECTED_ALPHA);
@@ -207,9 +209,6 @@ public class FloorModel {
       OpenglRenderer.getInstance().currentAlpha.set(ModelConstants.UNSELECTED_ALPHA);
     }
 
-    for(IconModel iconModel : iconModels) {
-      iconModel.draw();
-    }
     for(ModelQuad b : nameQuads) {
       b.draw(Pass.PASS_DRAW);
     }
@@ -217,6 +216,7 @@ public class FloorModel {
       b.draw(Pass.PASS_DRAW);
     }
 
+    OpenglRenderer.getInstance().currentAlpha.set(ModelConstants.SELECTED_ALPHA);
     GLES20.glDepthMask(false);
     OpenglRenderer.getInstance().allFlush();
     GLES20.glDepthMask(true);
@@ -226,7 +226,6 @@ public class FloorModel {
       tunnel.draw(Pass.PASS_DRAW);
     }
     OpenglRenderer.getInstance().allFlush();
-    OpenglRenderer.getInstance().currentAlpha.set(ModelConstants.SELECTED_ALPHA);
   }
 
   public void pick() {

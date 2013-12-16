@@ -20,6 +20,7 @@
                     style="@style/NavButton.left"/>
 
             <ImageButton
+                    android:id="@+id/nav_search"
                     style="@style/NavButton.right"
                     android:src="@drawable/nav_search"
                     android:layout_width="@dimen/title_bar_height"
@@ -44,6 +45,12 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="right|top"
                     android:id="@+id/indoor_floor_selector"/>
+
+            <com.navior.ids.android.view.button.DimenSwitchButton
+                    android:id="@+id/dimen_switcher"
+                    android:layout_margin="@dimen/dimen_switcher_margin"
+                    android:layout_width="@dimen/dimen_switcher_size"
+                    android:layout_height="@dimen/dimen_switcher_size"/>
         </FrameLayout>
 
         <LinearLayout style="@style/FunctionBar">

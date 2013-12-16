@@ -4,6 +4,7 @@ package com.navior.ids.android.view.mall3d.appModel;
 import android.opengl.Matrix;
 
 import com.navior.ids.android.data.Parameter;
+import com.navior.ids.android.view.mall3d.OpenglRenderer;
 import com.navior.ids.android.view.mall3d.model.ModelPacman;
 import com.navior.ids.android.view.mall3d.pass.Pass;
 import com.navior.ips.model.Floor;
@@ -50,7 +51,7 @@ public class LocationModel extends ModelPacman {
   }
 
   public void draw() {
-    if(Parameter.getInstance().isView3D()) {
+    if(OpenglRenderer.getInstance().isView3D()) {
       Matrix.setIdentityM(matrixWorld, 0);
       Matrix.translateM(matrixWorld, 0, x,y,z);
       Matrix.rotateM(matrixWorld, 0, theta, 0,1,0);

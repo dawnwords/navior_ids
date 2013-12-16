@@ -84,7 +84,6 @@ public abstract class Pipeline {
     GLES20.glEnableVertexAttribArray(Location.TEXCOORDBUFFER_ALOCATIONS[1]);
     Location.COLOR_ULOCATION = -1;
     Location.ALPHA_ULOCATION = -1;
-    Location.SINCOS_ULOCATION = -1;
     Location.MATRIXMVP_ULOCATION = -1;
     Location.TEXTURE_ULOCATIONS[0] = -1;
     Location.TEXTURE_ULOCATIONS[1] = -1;

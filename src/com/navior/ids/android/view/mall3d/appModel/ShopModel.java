@@ -59,6 +59,9 @@ public class ShopModel extends Model {
   public static final float BG_OPACITY = 0.85f;
   public static final float STR_OPACITY = 1.0f;
 
+  private float floorHeight;
+  public float getFloorHeight() { return floorHeight; }
+
   public Shop getShop() { return shop; }
   public ModelColorIndexed getRoof() { return roof; }
   public ModelLine getEdge() { return edge; }
@@ -70,6 +73,7 @@ public class ShopModel extends Model {
   public void setShopIcon(ModelQuad shopIcon) { this.shopIcon = shopIcon; }
 
   public ShopModel(Shop shop, boolean isBG, float floorHeight) {
+    this.floorHeight = floorHeight;
     modelPick();
     float[] pickColor = getPickColor();
 

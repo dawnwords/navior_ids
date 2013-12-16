@@ -121,7 +121,7 @@ public class FloorSelector extends FrameLayout {
         return false;
       }
     });
-    floorListView.setOnTouchListener(new OnTouchListener(){
+    floorListView.setOnTouchListener(new OnTouchListener() {
       @Override
       public boolean onTouch(View v, MotionEvent event) {
         return isShrink;
@@ -139,7 +139,7 @@ public class FloorSelector extends FrameLayout {
             Parameter.getInstance().requestRender();
           }
           handler.sendEmptyMessageDelayed(SHRINK, HIDE_TIME_MILLIS);
-        } else {
+        } else if (scrollState == SCROLL_STATE_TOUCH_SCROLL) {
           doExpand();
         }
       }

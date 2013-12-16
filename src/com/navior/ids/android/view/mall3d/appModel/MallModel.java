@@ -12,19 +12,15 @@
  */
 package com.navior.ids.android.view.mall3d.appModel;
 
-import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 
 import com.navior.ids.android.data.Parameter;
 import com.navior.ids.android.view.mall3d.OpenglRenderer;
 import com.navior.ids.android.view.mall3d.model.Model;
-import com.navior.ids.android.view.mall3d.model.ModelPacman;
-import com.navior.ids.android.view.mall3d.pass.Pass;
 import com.navior.ids.android.view.mall3d.util.AABB;
 import com.navior.ids.android.view.mall3d.util.ThirdPersonCamera;
 import com.navior.ips.model.Floor;
-import com.navior.ips.model.Location;
 import com.navior.ips.model.Mall;
 import com.navior.ips.model.POP;
 import com.navior.ips.model.Path;
@@ -103,7 +99,7 @@ public class MallModel {
         int f2 = floorId2Index.get(b.getFloorId());
         TunnelModel tunnel = new TunnelModel(a, b, f1, f2);
 
-        if(f1 < f2)
+        if(f1 > f2)
           floorModels.get(f1).addTunnel(tunnel);
         else
           floorModels.get(f2).addTunnel(tunnel);
@@ -112,8 +108,8 @@ public class MallModel {
 
     ThirdPersonCamera camera = OpenglRenderer.getInstance().getCamera();
     camera.setTarget(cx, 0, cy);
-    camera.setAlpha((float) (Math.PI / 2));
-    camera.setBeta(0.5f);
+    camera.setAlpha(OpenglRenderer.DEFAULT_3D_CAMERA_ALPHA);
+    camera.setBeta(OpenglRenderer.DEFAULT_3D_CAMERA_BETA);
 
     camera.setMinMaxTarget(new float[]{minX, maxX, -0.5f * ModelConstants.FLOOR_GAP, (mall.getL().size() - 0.5f) * ModelConstants.FLOOR_GAP, minY, maxY});
 
@@ -147,7 +143,7 @@ public class MallModel {
 
     OpenglRenderer.getInstance().currentAlpha.set(1f);
 
-    if(Parameter.getInstance().isView3D()) {
+    if(OpenglRenderer.getInstance().isView3D()) {
       for(FloorModel floorModel : floorModels) {
         floorModel.pick();
       }
@@ -176,15 +172,7 @@ public class MallModel {
       route.draw();
     }
 
-//    Location l = new Location();
-//    l.setFloorId(mall.getL().get(0).getId());
-//    l.setX(150f);
-//    l.setY(200f);
-//
-//    locationModel.setLocation(l, 1);
-//    locationModel.draw(Pass.PASS_DRAW);
-
-    if(Parameter.getInstance().isView3D()) {
+    if(OpenglRenderer.getInstance().isView3D() && !OpenglRenderer.getInstance().isSwitching()) {
       for(FloorModel floorModel : floorModels) {
         floorModel.draw();
       }

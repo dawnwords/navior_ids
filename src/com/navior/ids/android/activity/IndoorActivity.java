@@ -129,6 +129,13 @@ public class IndoorActivity extends Activity {
         myLocation();
       }
     });
+    findViewById(R.id.dimen_switcher).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        switchDimension();
+      }
+    });
+
     selector = (FloorSelector) findViewById(R.id.indoor_floor_selector);
     shopPopup = new ShopDetailPopup(IndoorActivity.this);
   }
@@ -185,6 +192,10 @@ public class IndoorActivity extends Activity {
       public void onServiceDisconnected(ComponentName name) {
       }
     }, BIND_AUTO_CREATE);
+  }
+
+  private void switchDimension() {
+    OpenglRenderer.getInstance().switchView();
   }
 
   private void myLocation() {

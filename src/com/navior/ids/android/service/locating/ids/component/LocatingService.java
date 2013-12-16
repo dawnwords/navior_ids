@@ -31,7 +31,6 @@ public class LocatingService extends Service {
     private final static long MAX_TIME_FOR_BT_TASK = 5000l;
     private final static long FIRST_WAIT_LOCATION_TIME = 4000l;
     private final static long LOCATION_REPORT_PERIOD = 4000l;
-
     // fields initialized from caller parameters
     private LocatingListener activityListener;
     // fields initialized by constructor
@@ -54,18 +53,18 @@ public class LocatingService extends Service {
          */
         @Override
         public void onStateNotReady() {
-            stateHandler.setServiceState( LocatingServiceState.NOT_READY );
+            stateHandler.setServiceState(LocatingServiceState.NOT_READY);
         }
 
         @Override
         public void onStartScanningError() {
-            stateHandler.setServiceState( LocatingServiceState.NOT_READY );
+            stateHandler.setServiceState(LocatingServiceState.NOT_READY);
             activityListener.onFailedToStartScanning();
         }
 
         @Override
         public void onActiveBtServiceError() {
-            stateHandler.setServiceState( LocatingServiceState.NOT_READY );
+            stateHandler.setServiceState(LocatingServiceState.NOT_READY);
             activityListener.onErrorInitializeBluetooth();
         }
 
@@ -74,11 +73,11 @@ public class LocatingService extends Service {
             LinkedList<RssiRecord> records = sampler.getRecords();
             // todo save records
             log(records);
-            if( !stateHandler.isEarlier( LocatingServiceState.LOCATING ) ) {
+            if (!stateHandler.isEarlier(LocatingServiceState.LOCATING)) {
                 computeLocation(records);
                 // if got new rssi after the first calculation, continue to calculate
-                while ( !stateHandler.isEarlier( LocatingServiceState.LOCATING )
-                        && sampler.hasNewRecord() ) {
+                while (!stateHandler.isEarlier(LocatingServiceState.LOCATING)
+                        && sampler.hasNewRecord()) {
                     computeLocation(sampler.getRecords());
                 }
             }
@@ -86,24 +85,26 @@ public class LocatingService extends Service {
 
         private void computeLocation(LinkedList<RssiRecord> records) {
 
-            List<RssiRecord> aggregatedRecords = calculator.aggregate(records);
+            List<RssiRecord> aggregatedRecords = calculator.aggregate(records, null);
 
             // ask the activity for pos records
             RssiRecord recordExample = aggregatedRecords.get(0);
-            calculatingTimer.schedule( new TimerTask() {
-                @Override
-                public void run() {
-                    // on timeout for requesting for pos
-                    stateHandler.setServiceState(LocatingServiceState.SCANNING);
-                    activityListener.onFailedToLocate();
-                }
-            }, MAX_TIME_FOR_POS );
-            HashMap< String, POS > posInfoMap = activityListener.getPosMap( recordExample.getStarName() );
 
+            HashMap<String, POS> posInfoMap = activityListener.getPosMap(recordExample.getStarName());
+            if(posInfoMap == null ) {
+                calculatingTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        // on timeout for requesting for pos
+                        stateHandler.setServiceState(LocatingServiceState.SCANNING);
+                        activityListener.onFailedToLocate();
+                    }
+                }, MAX_TIME_FOR_POS);
+                return;
+            }
             // getPosMap() could return null
-            if (posInfoMap != null) {
-                calculatingTimer.cancel();
-                calculatingTimer = new Timer();
+            else {
+                resetCalculatingTimer();
                 Location location = calculator.calculate(records, posInfoMap);
                 if (location != null) {
                     locationFilter.input(location);
@@ -122,13 +123,12 @@ public class LocatingService extends Service {
                 switch (state) {
                     case BluetoothAdapter.STATE_OFF:
                         activityListener.onBluetoothOff();
-                        stateHandler.setServiceState( LocatingServiceState.NOT_READY );
+                        stateHandler.setServiceState(LocatingServiceState.NOT_READY);
                         break;
                     case BluetoothAdapter.STATE_ON:
-                        if( sampler != null ) {
+                        if (sampler != null) {
                             sampler.reinitialize();
-                        }
-                        else {
+                        } else {
                             initializeSampler();
                         }
                         break;
@@ -155,83 +155,128 @@ public class LocatingService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void initializeSampler() {
-        stateHandler.setServiceState( LocatingServiceState.INITIALIZING );
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBluetoothAdapter == null) {
-                stateHandler.setServiceState( LocatingServiceState.NOT_READY );
-                activityListener.onBluetoothUnavailable();
-        }
-        else {
-            if (!mBluetoothAdapter.isEnabled()) {
-                    stateHandler.setServiceState( LocatingServiceState.NOT_READY );
-                    activityListener.onBluetoothOff();
-            }
-            else {
-                // process of start Samsung bt service may be blocked. so start a new thread to do this
-                new Thread() {
-                    @Override
-                    public void run() {
-                        sampler = new SamsungSampler( LocatingService.this, listener );
-                    }
-                }.start();
-            }
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
-
         return new LocatingBinder();
     }
 
     @Override
     public void onDestroy() {
         unregisterReceiver(mReceiver);
-        if( sampler != null ) {
+        if (sampler != null) {
             sampler.recycle();
         }
         super.onDestroy();
     }
 
+    private void initializeSampler() {
+        stateHandler.setServiceState(LocatingServiceState.INITIALIZING);
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            stateHandler.setServiceState(LocatingServiceState.NOT_READY);
+            activityListener.onBluetoothUnavailable();
+        } else {
+            if (!mBluetoothAdapter.isEnabled()) {
+                stateHandler.setServiceState(LocatingServiceState.NOT_READY);
+                activityListener.onBluetoothOff();
+            } else {
+                // process of start Samsung bt service may be blocked. so start a new thread to do it
+                new Thread() {
+                    @Override
+                    public void run() {
+                        sampler = new SamsungSampler(LocatingService.this, listener);
+                    }
+                }.start();
+            }
+        }
+    }
+
+    private void startLocationReportTimer() {
+        resetLocationReportTimer();
+        locationReportTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                Location result = locationFilter.getOutput();
+                if (result != null) {
+                    activityListener.onNewLocation(result);
+                }
+            }
+        }, FIRST_WAIT_LOCATION_TIME, LOCATION_REPORT_PERIOD);
+    }
+
+    private void resetLocationReportTimer() {
+        locationReportTimer.cancel();
+        locationReportTimer = new Timer();
+    }
+
+    private void resetCalculatingTimer() {
+        calculatingTimer.cancel();
+        calculatingTimer = new Timer();
+    }
+
+    private void log(Collection<RssiRecord> records) {
+        // todo save records into db
+    }
+
+    private enum LocatingServiceState implements Comparable<LocatingServiceState> {
+
+        NOT_READY,
+        INITIALIZING,
+        READY,
+        SCANNING,
+        LOCATING;
+        private Timer timer;
+        private StateChangeListener listener;
+
+        LocatingServiceState() {
+            this.timer = new Timer();
+            listener = null;
+        }
+    }
+
+    private interface StateChangeListener {
+        void onReachState();
+
+        void onTimeOut();
+    }
+
     public class LocatingBinder extends Binder {
-        public void setListener( LocatingListener listener ) {
+        public void setListener(LocatingListener listener) {
             activityListener = listener;
             initializeSampler();
         }
 
         public void startScanning() {
-            if( stateHandler.isEarlier( LocatingServiceState.READY ) ) {
+            if (stateHandler.isEarlier(LocatingServiceState.READY)) {
                 stateHandler.setStateListener(
                         LocatingServiceState.READY,
                         new StateChangeListener() {
                             @Override
                             public void onReachState() {
                                 sampler.startScan();
-                                stateHandler.setServiceState(LocatingServiceState.SCANNING );
+                                stateHandler.setServiceState(LocatingServiceState.SCANNING);
                             }
 
                             @Override
                             public void onTimeOut() {
                                 activityListener.onFailedToStartScanning();
                             }
-                        } );
-            }
-            else {
+                        });
+            } else {
                 sampler.startScan();
-                stateHandler.setServiceState( LocatingServiceState.SCANNING );
+                stateHandler.setServiceState(LocatingServiceState.SCANNING);
             }
         }
 
         public void stopScanning() {
-            if( !stateHandler.isEarlier( LocatingServiceState.SCANNING ) ) {
+            if (!stateHandler.isEarlier(LocatingServiceState.SCANNING)) {
                 sampler.stopScan();
-                stateHandler.setServiceState( LocatingServiceState.READY );
+                stateHandler.setServiceState(LocatingServiceState.READY);
             }
         }
 
         public void startLocating() {
-            if( stateHandler.isEarlier( LocatingServiceState.READY ) ) {
+            if (stateHandler.isEarlier(LocatingServiceState.READY)) {
                 stateHandler.setStateListener(
                         LocatingServiceState.READY,
                         new StateChangeListener() {
@@ -239,50 +284,30 @@ public class LocatingService extends Service {
                             public void onReachState() {
                                 startLocationReportTimer();
                                 sampler.startScan();
-                                stateHandler.setServiceState(LocatingServiceState.LOCATING );
+                                stateHandler.setServiceState(LocatingServiceState.LOCATING);
                             }
 
                             @Override
                             public void onTimeOut() {
                                 activityListener.onFailedToLocate();
                             }
-                        } );
-            }
-            else {
+                        });
+            } else {
                 sampler.startScan();
                 startLocationReportTimer();
-                stateHandler.setServiceState( LocatingServiceState.LOCATING );
+                stateHandler.setServiceState(LocatingServiceState.LOCATING);
             }
         }
 
         public void stopLocating() {
-            if( !stateHandler.isEarlier( LocatingServiceState.SCANNING ) && sampler != null ) {
+            if (!stateHandler.isEarlier(LocatingServiceState.SCANNING) && sampler != null) {
                 sampler.stopScan();
             }
 
-            if( !stateHandler.isEarlier( LocatingServiceState.READY ) ) {
-                stateHandler.setServiceState( LocatingServiceState.READY );
+            if (!stateHandler.isEarlier(LocatingServiceState.READY)) {
+                stateHandler.setServiceState(LocatingServiceState.READY);
             }
         }
-    }
-
-    private void startLocationReportTimer() {
-        locationReportTimer.cancel();   // clear all tasks
-        locationReportTimer = new Timer();
-        locationReportTimer.scheduleAtFixedRate( new TimerTask() {
-            @Override
-            public void run() {
-                Location result = locationFilter.getOutput();
-                if( result != null ) {
-                    activityListener.onNewLocation( result );
-                }
-            }
-        }, FIRST_WAIT_LOCATION_TIME, LOCATION_REPORT_PERIOD );
-    }
-
-    private void cancleLocationReportTimer() {
-        locationReportTimer.cancel();
-        locationReportTimer = new Timer();
     }
 
     private class ServiceStateHandler {
@@ -293,24 +318,22 @@ public class LocatingService extends Service {
             this.state = LocatingServiceState.NOT_READY;
         }
 
-        private void setServiceState( LocatingServiceState state ) {
-            System.out.println( "new state " + state );
+        private void setServiceState(LocatingServiceState state) {
             this.state = state;
             state.timer.cancel();
             state.timer = new Timer();
-            if( state.listener != null ) {
+            if (state.listener != null) {
                 state.listener.onReachState();
                 state.listener = null;
             }
 
-            if( isEarlier( LocatingServiceState.LOCATING ) ) {
-                cancleLocationReportTimer();
-                calculatingTimer.cancel();
-                calculatingTimer = new Timer();
+            if (isEarlier(LocatingServiceState.LOCATING)) {
+                resetLocationReportTimer();
+                resetCalculatingTimer();
             }
         }
 
-        private void setStateListener( final LocatingServiceState state, final StateChangeListener listener ) {
+        private void setStateListener(final LocatingServiceState state, final StateChangeListener listener) {
             state.listener = listener;
             state.timer.schedule(new TimerTask() {
                 @Override
@@ -318,38 +341,14 @@ public class LocatingService extends Service {
                     listener.onTimeOut();
                     state.listener = null;
                 }
-            }, MAX_TIME_FOR_BT_TASK );
+            }, MAX_TIME_FOR_BT_TASK);
 
         }
 
-        public boolean isEarlier( LocatingServiceState state ) {
+        public boolean isEarlier(LocatingServiceState state) {
             return this.state.ordinal() < state.ordinal();
         }
     }
 
-    private interface StateChangeListener {
-        void onReachState();
-        void onTimeOut();
-    }
 
-    private enum LocatingServiceState implements Comparable< LocatingServiceState > {
-
-        NOT_READY,
-        INITIALIZING,
-        READY,
-        SCANNING,
-        LOCATING;
-
-        private Timer timer;
-        private StateChangeListener listener;
-
-        LocatingServiceState() {
-            this.timer = new Timer();
-            listener = null;
-        }
-    }
-
-    private void log(Collection<RssiRecord> records) {
-        // todo save records into db
-    }
 }

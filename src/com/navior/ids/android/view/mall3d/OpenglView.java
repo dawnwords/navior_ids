@@ -8,13 +8,9 @@ import android.view.MotionEvent;
 
 import com.navior.ids.android.data.Parameter;
 import com.navior.ids.android.view.list.FloorSelector;
-import com.navior.ips.model.Mall;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.Observable;
 import java.util.Observer;
-
-import javax.microedition.khronos.opengles.GL10;
 
 public class OpenglView extends GLSurfaceView {
   private boolean started = false;

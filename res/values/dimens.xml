@@ -28,4 +28,6 @@
     <dimen name="floor_selector_item_h">200px</dimen>
     <dimen name="popup_my_location_above_h">60dp</dimen>
     <dimen name="popup_my_location_below_h">40dp</dimen>
+    <dimen name="dimen_switcher_size">184px</dimen>
+    <dimen name="dimen_switcher_margin">50px</dimen>
 </resources>

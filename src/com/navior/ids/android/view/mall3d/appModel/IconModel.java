@@ -14,8 +14,6 @@ package com.navior.ids.android.view.mall3d.appModel;
 
 import com.navior.ids.android.view.mall3d.model.Model;
 import com.navior.ids.android.view.mall3d.model.ModelBillboardXZ;
-import com.navior.ids.android.view.mall3d.model.ModelQuad;
-import com.navior.ids.android.view.mall3d.model.ModelTexture;
 import com.navior.ids.android.view.mall3d.pass.Pass;
 import com.navior.ips.model.Shop;
 import com.navior.ips.model.type.IcoType;
@@ -25,7 +23,12 @@ public class IconModel extends Model {
 
   private ModelBillboardXZ quad;
 
+  private float floorHeight;
+  public float getFloorHeight() { return floorHeight; }
+
   public IconModel(Shop icon, float floorHeight) {
+    this.floorHeight = floorHeight;
+
     shop = icon;
     String fileName = IcoType.get(icon.getIco()).getName();
 
@@ -33,7 +36,7 @@ public class IconModel extends Model {
 
     modelPick();
     float[] pickColor = getPickColor();
-    quad = new ModelBillboardXZ(fileName, lr[0] + lr[2] / 2, floorHeight + ModelConstants.ICON_HEIGHT, lr[1] + lr[2] / 2, ModelConstants.ICON_SIZE);
+    quad = new ModelBillboardXZ(fileName, lr[0], floorHeight + ModelConstants.ICON_HEIGHT, lr[1], ModelConstants.ICON_SIZE);
 
     quad.setPickColor(pickColor);
     quad.setPasses();
