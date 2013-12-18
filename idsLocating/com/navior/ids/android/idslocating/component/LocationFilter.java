@@ -1,4 +1,4 @@
-package com.navior.ids.android.service.locating.ids.component;
+package com.navior.ids.android.idslocating.component;
 
 import com.navior.ips.model.Location;
 

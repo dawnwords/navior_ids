@@ -31,7 +31,7 @@ public abstract class Pipeline {
     return shader;
   }
 
-  //load shaders, link, get handles(component).
+  //load shaders, link, get handles(com.navior.ids.android.idslocating.component).
   public void init(String vs, String ps) {
     //load shaders
     int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vs);

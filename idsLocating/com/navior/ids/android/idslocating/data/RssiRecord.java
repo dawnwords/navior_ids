@@ -10,7 +10,7 @@
  * @author wangxiayang
  * @date 29/08/13
  */
-package com.navior.ids.android.service.locating.ids.data;
+package com.navior.ids.android.idslocating.data;
 
 import java.util.Date;
 

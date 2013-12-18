@@ -10,7 +10,7 @@
  * @author wangxiayang
  * @date 10/10/13
  */
-package com.navior.ids.android.service.locating.ids.data;
+package com.navior.ids.android.idslocating.data;
 
 import com.navior.ips.model.POS;
 

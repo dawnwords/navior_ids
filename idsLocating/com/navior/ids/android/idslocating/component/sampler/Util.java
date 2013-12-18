@@ -10,7 +10,7 @@
  * @author cs1
  * @date 13-11-6
  */
-package com.navior.ids.android.service.locating.ids.component.sampler;
+package com.navior.ids.android.idslocating.component.sampler;
 
 public class Util {
   private final static char[] SOURCE = {'A', 'B', 'C', 'D', 'E', 'F', 'G',

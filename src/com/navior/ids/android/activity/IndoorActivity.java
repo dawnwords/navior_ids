@@ -14,6 +14,7 @@ package com.navior.ids.android.activity;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,8 +29,9 @@ import com.navior.ids.android.R;
 import com.navior.ids.android.data.Parameter;
 import com.navior.ids.android.data.actiondao.FloorBySnDAO;
 import com.navior.ids.android.data.actiondao.FloorDAO;
-import com.navior.ids.android.service.locating.ids.component.LocatingListener;
-import com.navior.ids.android.service.locating.ids.component.LocatingService;
+import com.navior.ids.android.idslocating.component.LocatingListener;
+import com.navior.ids.android.idslocating.component.LocatingService;
+import com.navior.ids.android.idslocating.data.RssiRecord;
 import com.navior.ids.android.view.list.FloorSelector;
 import com.navior.ids.android.view.mall3d.OpenglRenderer;
 import com.navior.ids.android.view.mall3d.OpenglView;
@@ -43,6 +45,7 @@ import com.navior.ips.model.POS;
 import com.navior.ips.model.Shop;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -76,7 +79,8 @@ public class IndoorActivity extends Activity {
       openglView.onPause();
     }
     if (locator != null) {
-      locator.stopLocating();
+        // will not keep scanning
+      locator.stopScanning(false);
     }
     Parameter.getInstance().deleteShopObserver(shopSelectObserver);
     super.onPause();
@@ -158,11 +162,17 @@ public class IndoorActivity extends Activity {
             return starMap;
           }
 
-          @Override
-          public void onNewLocation(Location location) {
+            @Override
+            public void onNewRssi(BluetoothDevice device, int rssi, byte[] bytes) {
+
+            }
+
+            @Override
+          public void onNewLocation(Location location, List<RssiRecord> rssiRecords) {
             Parameter.getInstance().setIndoorPosition(location);
             if (!isNavigating) {
-              locator.stopLocating();
+                // completely stop scanning
+              locator.stopScanning(false);
             }
           }
 
@@ -179,7 +189,7 @@ public class IndoorActivity extends Activity {
           public void onBluetoothOff() {
 
             toast(R.string.bluetooth_unavailable);
-            locator.stopLocating();
+            locator.stopScanning(false);
           }
 
           @Override
@@ -189,7 +199,7 @@ public class IndoorActivity extends Activity {
           @Override
           public void onErrorInitializeBluetooth() {
             toast(R.string.bluetooth_unavailable);
-            locator.stopLocating();
+            locator.stopScanning(false);
           }
         });
       }
@@ -203,7 +213,7 @@ public class IndoorActivity extends Activity {
   private void myLocation() {
     if (locator != null) {
       toast(R.string.locating);
-      locator.startLocating();
+      locator.startScanning(true);
     }
   }
 

@@ -10,9 +10,9 @@
  * @author cs1
  * @date 13-10-21
  */
-package com.navior.ids.android.service.locating.ids.component;
+package com.navior.ids.android.idslocating.component;
 
-import com.navior.ids.android.service.locating.ids.data.RssiRecord;
+import com.navior.ids.android.idslocating.data.RssiRecord;
 import com.navior.ips.model.Location;
 import com.navior.ips.model.POS;
 

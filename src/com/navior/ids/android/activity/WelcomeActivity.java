@@ -26,7 +26,7 @@ import android.widget.ImageView;
 import com.navior.ids.android.R;
 import com.navior.ids.android.data.Parameter;
 import com.navior.ids.android.data.actiondao.FloorBySnDAO;
-import com.navior.ids.android.service.locating.ids.component.LocatingService;
+import com.navior.ids.android.idslocating.component.LocatingService;
 import com.navior.ips.model.Floor;
 
 import java.util.Vector;

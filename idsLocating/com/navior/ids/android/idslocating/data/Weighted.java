@@ -10,7 +10,7 @@
  * @author wangxiayang
  * @date 23/09/13
  */
-package com.navior.ids.android.service.locating.ids.data;
+package com.navior.ids.android.idslocating.data;
 
 public interface Weighted<T> {
   public Comparable<T> getWeight();

@@ -10,7 +10,7 @@
  * @author wangxiayang
  * @date 23/09/13
  */
-package com.navior.ids.android.service.locating.ids.data;
+package com.navior.ids.android.idslocating.data;
 
 import java.util.Collection;
 import java.util.Date;
@@ -19,12 +19,6 @@ import java.util.LinkedList;
 public class SlidingWindowList<E extends Weighted<Date>> extends LinkedList<E> {
 
   public static final int DEFAULT_TEMPORAL_WINDOW_SIZE = 10000;
-
-  private long temporalWindowSize;
-
-  public SlidingWindowList() {
-    temporalWindowSize = DEFAULT_TEMPORAL_WINDOW_SIZE;
-  }
 
   @Override
   public boolean add(E newElement) {
@@ -43,7 +37,7 @@ public class SlidingWindowList<E extends Weighted<Date>> extends LinkedList<E> {
   }
 
   private void trimByTemporalWindowSize() {
-    Date currentTime = new Date(System.currentTimeMillis() - temporalWindowSize);
+    Date currentTime = new Date(System.currentTimeMillis() - DEFAULT_TEMPORAL_WINDOW_SIZE);
     while (size() > 0 && (getFirst().getWeight().compareTo(currentTime)) < 0) {
       removeFirst();
     }
